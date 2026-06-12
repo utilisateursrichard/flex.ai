@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flex.ai - Not Available</title>
+  <!-- Google Fonts : Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .not-available-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      text-align: center;
+      z-index: 1;
+    }
+    .not-available-card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-lg);
+      padding: 4rem 3rem;
+      width: 100%;
+      max-width: 550px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+    .dark-theme .not-available-card {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+    .icon-wrapper {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    .not-available-card h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 1.25rem;
+    }
+    .not-available-card h1 span {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .not-available-card p {
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .accent-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition);
+      border-bottom: 1px dashed var(--primary);
+      padding-bottom: 2px;
+      word-break: break-all;
+    }
+    .accent-link:hover {
+      color: var(--secondary);
+      border-bottom-color: var(--secondary);
+      text-shadow: 0 0 8px var(--secondary-glow);
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glass-bg"></div>
+  <button id="btn-theme-toggle" class="btn-theme-toggle" title="Changer le thème">☀️</button>
+
+  <div class="not-available-container">
+    <div class="not-available-card">
+      <div class="icon-wrapper">🚀</div>
+      <h1><span>Not Available</span></h1>
+      <p>This project isn't available yet, if needed, you can go to <a href="https://github.com/utilisateursrichard/flex.ai" target="_blank" class="accent-link">https://github.com/utilisateursrichard/flex.ai</a> to see the source code.</p>
+    </div>
+  </div>
+
+  <!-- Intégrer la détection du thème stocké -->
+  <script>
+    const btnThemeToggle = document.getElementById('btn-theme-toggle');
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        if (btnThemeToggle) btnThemeToggle.textContent = '🌙';
+      } else {
+        document.body.classList.remove('dark-theme');
+        if (btnThemeToggle) btnThemeToggle.textContent = '☀️';
+      }
+    }
+    initTheme();
+    if (btnThemeToggle) {
+      btnThemeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        btnThemeToggle.textContent = isDark ? '🌙' : '☀️';
+      });
+    }
+  </script>
+</body>
+</html>
