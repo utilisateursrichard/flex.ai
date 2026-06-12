@@ -70,7 +70,7 @@ Any user can also register a new standard account directly from the login page b
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 - `server.js` - Express backend server managing routing and spawning SurrealDB.
 - `package.json` - Dependency configurations and scripts.
