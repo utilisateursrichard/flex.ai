@@ -7,6 +7,11 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configuration de la base de données SurrealDB
+const DB_HOST = process.env.SURREAL_HOST || '127.0.0.1';
+const DB_PORT = process.env.SURREAL_PORT || '8000';
+const DB_URL = `http://${DB_HOST}:${DB_PORT}`;
+
 // État en mémoire du prototype de serveur
 const serverState = {
   uptimeStart: Date.now(),
@@ -17,30 +22,37 @@ const serverState = {
   maxLogs: 50
 };
 
-// Lancement de SurrealDB en arrière-plan
-console.log("Démarrage de SurrealDB...");
-const surrealProcess = spawn('/home/richard/.surrealdb/surreal', [
-  'start',
-  '--user', 'root',
-  '--pass', 'root',
-  '--bind', '127.0.0.1:8000',
-  'surrealkv://surreal.db'
-]);
+// Lancement de SurrealDB en arrière-plan (si locale)
+let surrealProcess = null;
+if (process.env.SURREAL_EXTERNAL === 'true') {
+  console.log(`Utilisation d'une instance SurrealDB externe sur ${DB_URL}`);
+} else {
+  console.log("Démarrage de SurrealDB...");
+  surrealProcess = spawn('/home/richard/.surrealdb/surreal', [
+    'start',
+    '--user', 'root',
+    '--pass', 'root',
+    '--bind', `${DB_HOST}:${DB_PORT}`,
+    'surrealkv://surreal.db'
+  ]);
 
-surrealProcess.stdout.on('data', (data) => {
-  // Optionnel : décommenter pour débogage
-  // console.log(`[SurrealDB]: ${data}`);
-});
+  surrealProcess.stdout.on('data', (data) => {
+    // Optionnel : décommenter pour débogage
+    // console.log(`[SurrealDB]: ${data}`);
+  });
 
-surrealProcess.stderr.on('data', (data) => {
-  // Optionnel : décommenter pour débogage
-  // console.error(`[SurrealDB Err]: ${data}`);
-});
+  surrealProcess.stderr.on('data', (data) => {
+    // Optionnel : décommenter pour débogage
+    // console.error(`[SurrealDB Err]: ${data}`);
+  });
+}
 
 // Arrêter SurrealDB quand le processus Node se termine
 const cleanup = () => {
-  console.log("Arrêt de SurrealDB...");
-  surrealProcess.kill();
+  if (surrealProcess) {
+    console.log("Arrêt de SurrealDB...");
+    surrealProcess.kill();
+  }
 };
 process.on('exit', cleanup);
 process.on('SIGINT', () => {
@@ -92,7 +104,7 @@ app.use(express.json());
 // Helper pour exécuter des requêtes SurrealQL via l'API REST
 async function querySurreal(sql, ns = 'test', db = 'test') {
   try {
-    const response = await fetch('http://127.0.0.1:8000/sql', {
+    const response = await fetch(`${DB_URL}/sql`, {
       method: 'POST',
       headers: {
         'Authorization': 'Basic ' + Buffer.from('root:root').toString('base64'),
@@ -126,7 +138,7 @@ async function initSurreal() {
   while (attempt < maxRetries) {
     try {
       // 1. Définir le namespace
-      await fetch('http://127.0.0.1:8000/sql', {
+      await fetch(`${DB_URL}/sql`, {
         method: 'POST',
         headers: {
           'Authorization': 'Basic ' + Buffer.from('root:root').toString('base64'),
@@ -137,7 +149,7 @@ async function initSurreal() {
       });
 
       // 2. Définir la base de données
-      await fetch('http://127.0.0.1:8000/sql', {
+      await fetch(`${DB_URL}/sql`, {
         method: 'POST',
         headers: {
           'Authorization': 'Basic ' + Buffer.from('root:root').toString('base64'),
