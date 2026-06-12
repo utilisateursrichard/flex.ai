@@ -4,7 +4,7 @@ Flex.ai is a clean, modern, and lightweight web application prototype featuring 
 
 ---
 
-## ⚡ Key Features
+## Key Features
 
 - **Dual-Theme Support**:
   - A clean, modern, and consumer-friendly **Light Mode** by default.
@@ -19,7 +19,7 @@ Flex.ai is a clean, modern, and lightweight web application prototype featuring 
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Backend**: Node.js & Express.
 - **Database**: SurrealDB (v3.1.4, running locally as a child process).
@@ -28,7 +28,7 @@ Flex.ai is a clean, modern, and lightweight web application prototype featuring 
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -58,8 +58,7 @@ npm start
 
 ### Accessing the Web App
 
-Open your browser and navigate to:
-👉 **[http://localhost:3000](http://localhost:3000)**
+Open your browser and navigate to **[http://localhost:3000](http://localhost:3000)**
 
 ### Default Credentials
 
@@ -71,7 +70,7 @@ Any user can also register a new standard account directly from the login page b
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 - `server.js` - Express backend server managing routing and spawning SurrealDB.
 - `package.json` - Dependency configurations and scripts.
