@@ -35,6 +35,7 @@ let logsIntervalId = null;
 // Écrans
 const authScreen = document.getElementById('auth-screen');
 const dashboardScreen = document.getElementById('dashboard-screen');
+const landingPageScreen = document.getElementById('landing-page-screen');
 
 // Formulaires d'Auth
 const loginForm = document.getElementById('login-form');
@@ -82,8 +83,14 @@ const logsConsole = document.getElementById('logs-console');
 const logFilterButtons = document.querySelectorAll('.filter-btn');
 
 // Éléments Standard User
-const welcomeUserName = document.getElementById('welcome-user-name');
+const welcomeUserName = document.getElementById('wip-user-name');
 const userLatencyVal = document.getElementById('user-latency-val');
+
+// Landing Page et Modale
+const btnOpenLogin = document.getElementById('btn-open-login');
+const btnCloseAuth = document.getElementById('btn-close-auth');
+const btnHeroStart = document.getElementById('btn-hero-start');
+const btnWipLogout = document.getElementById('btn-wip-logout');
 
 // --- INITIALISATION DU GRAPH CPU (Cercle SVG) ---
 let circumference = 0;
@@ -193,10 +200,16 @@ function showAuthView() {
   stopIntervals();
   currentUser = null;
   dashboardScreen.classList.add('hide');
-  authScreen.classList.remove('hide');
+  authScreen.classList.add('hide');
+  if (landingPageScreen) {
+    landingPageScreen.classList.remove('hide');
+  }
 }
 
 function showDashboardView() {
+  if (landingPageScreen) {
+    landingPageScreen.classList.add('hide');
+  }
   authScreen.classList.add('hide');
   dashboardScreen.classList.remove('hide');
 
@@ -215,8 +228,11 @@ function showDashboardView() {
   } else {
     adminPanel.classList.add('hide');
     userPanel.classList.remove('hide');
-    welcomeUserName.textContent = currentUser.name;
-    startUserIntervals();
+    if (welcomeUserName) {
+      welcomeUserName.textContent = currentUser.name;
+    }
+    // Charger une seule fois le statut pour les specs système
+    fetchStatus();
   }
 }
 
@@ -525,6 +541,59 @@ logFilterButtons.forEach(btn => {
     }
   });
 });
+
+// --- ÉVÉNEMENTS LANDING PAGE & MODALE ---
+
+if (btnOpenLogin) {
+  btnOpenLogin.addEventListener('click', () => {
+    authScreen.classList.remove('hide');
+  });
+}
+
+if (btnHeroStart) {
+  btnHeroStart.addEventListener('click', () => {
+    authScreen.classList.remove('hide');
+  });
+}
+
+if (btnCloseAuth) {
+  btnCloseAuth.addEventListener('click', () => {
+    authScreen.classList.add('hide');
+  });
+}
+
+// Click en dehors de la modale pour fermer
+if (authScreen) {
+  authScreen.addEventListener('click', (e) => {
+    if (e.target === authScreen) {
+      authScreen.classList.add('hide');
+    }
+  });
+}
+
+// Clic sur les boutons de tarifs pour ouvrir la modale
+document.querySelectorAll('.btn-pricing-select').forEach(btn => {
+  btn.addEventListener('click', () => {
+    authScreen.classList.remove('hide');
+  });
+});
+
+// Bouton de déconnexion spécifique à l'écran W.I.P.
+if (btnWipLogout) {
+  btnWipLogout.addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: getHeaders()
+      });
+    } catch (err) {
+      console.error('Erreur lors du logout:', err);
+    } finally {
+      localStorage.removeItem('token');
+      showAuthView();
+    }
+  });
+}
 
 // --- Lancement au chargement de la page ---
 checkAuthSession();
