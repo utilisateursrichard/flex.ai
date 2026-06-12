@@ -122,7 +122,7 @@ function hashPassword(password) {
 async function initSurreal() {
   const maxRetries = 15;
   let attempt = 0;
-  
+
   while (attempt < maxRetries) {
     try {
       // 1. Définir le namespace
@@ -163,7 +163,7 @@ async function initSurreal() {
         await querySurreal(`CREATE user:admin SET username = 'admin', password = '${passHash}', name = 'Administrateur', role = 'admin', createdAt = time::now();`);
         addLog('info', 'Compte administrateur initialisé avec succès (admin:admin)', 'security');
       }
-      
+
       addLog('info', 'Connexion et initialisation de SurrealDB réussies', 'system');
       break;
     } catch (err) {
@@ -172,7 +172,7 @@ async function initSurreal() {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
-  
+
   if (attempt === maxRetries) {
     addLog('error', 'Impossible de se connecter à SurrealDB après plusieurs tentatives', 'system');
   }
@@ -265,32 +265,32 @@ app.post('/api/auth/register', async (req, res) => {
     if (!username || !password || !name) {
       return res.status(400).json({ error: 'Champs manquants', message: 'Veuillez remplir tous les champs.' });
     }
-    
+
     const cleanUsername = username.trim().toLowerCase();
-    
+
     // Vérifier si l'utilisateur existe déjà
     const checkRes = await querySurreal(`SELECT * FROM user WHERE username = '${cleanUsername}';`);
     if (checkRes[0] && checkRes[0].result && checkRes[0].result.length > 0) {
       return res.status(400).json({ error: 'Existe déjà', message: 'Cet identifiant est déjà utilisé.' });
     }
-    
+
     const passHash = hashPassword(password);
     const escapedName = name.replace(/'/g, "\\'");
-    
+
     // Insérer dans SurrealDB
     const insertRes = await querySurreal(`CREATE user SET username = '${cleanUsername}', password = '${passHash}', name = '${escapedName}', role = 'user', createdAt = time::now();`);
-    
+
     if (insertRes[0] && insertRes[0].status === 'ERR') {
       throw new Error(insertRes[0].result);
     }
-    
+
     // Générer une session
     const token = crypto.randomBytes(32).toString('hex');
     const userData = { username: cleanUsername, name: name, role: 'user' };
     sessions.set(token, userData);
-    
+
     addLog('info', `Nouvel utilisateur inscrit : ${cleanUsername}`, 'security');
-    
+
     res.json({
       message: 'Inscription réussie',
       token,
@@ -309,10 +309,10 @@ app.post('/api/auth/login', async (req, res) => {
     if (!username || !password) {
       return res.status(400).json({ error: 'Champs manquants', message: 'Identifiant et mot de passe requis.' });
     }
-    
+
     const cleanUsername = username.trim().toLowerCase();
     const passHash = hashPassword(password);
-    
+
     const searchRes = await querySurreal(`SELECT * FROM user WHERE username = '${cleanUsername}';`);
     if (searchRes[0] && searchRes[0].result && searchRes[0].result.length > 0) {
       const user = searchRes[0].result[0];
@@ -320,9 +320,9 @@ app.post('/api/auth/login', async (req, res) => {
         const token = crypto.randomBytes(32).toString('hex');
         const userData = { username: user.username, name: user.name, role: user.role };
         sessions.set(token, userData);
-        
+
         addLog('info', `Utilisateur connecté : ${cleanUsername} (${user.role})`, 'security');
-        
+
         return res.json({
           message: 'Connexion réussie',
           token,
@@ -330,7 +330,7 @@ app.post('/api/auth/login', async (req, res) => {
         });
       }
     }
-    
+
     addLog('warn', `Tentative de connexion échouée pour : ${cleanUsername}`, 'security');
     res.status(400).json({ error: 'Identifiants incorrects', message: 'Identifiant ou mot de passe incorrect.' });
   } catch (err) {
@@ -434,7 +434,7 @@ app.post('/api/admin/query', authenticate, requireAdmin, async (req, res) => {
     if (!query) {
       return res.status(400).json({ error: 'Requête manquante', message: 'Veuillez saisir une requête SurrealQL.' });
     }
-    
+
     const queryRes = await querySurreal(query);
     addLog('info', `Console SurrealQL : Exécution de "${query.substring(0, 50)}${query.length > 50 ? '...' : ''}"`, 'system');
     res.json(queryRes);

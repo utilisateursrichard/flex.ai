@@ -1,3 +1,28 @@
+// --- GESTION DU THÈME (Clair par défaut, Sombre sur option) ---
+const btnThemeToggle = document.getElementById('btn-theme-toggle');
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+    if (btnThemeToggle) btnThemeToggle.textContent = '🌙';
+  } else {
+    document.body.classList.remove('dark-theme');
+    if (btnThemeToggle) btnThemeToggle.textContent = '☀️';
+  }
+}
+
+initTheme();
+
+if (btnThemeToggle) {
+  btnThemeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-theme');
+    const isDark = document.body.classList.contains('dark-theme');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    btnThemeToggle.textContent = isDark ? '🌙' : '☀️';
+  });
+}
+
 // --- CONFIGURATION & ÉTAT GLOBAL ---
 let currentUser = null;
 let systemSpecsLoaded = false;
@@ -103,7 +128,7 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 function escapeHTML(str) {
-  return str.replace(/[&<>'"]/g, 
+  return str.replace(/[&<>'"]/g,
     tag => ({
       '&': '&amp;',
       '<': '&lt;',
@@ -370,7 +395,7 @@ function renderUsersTable(users) {
   usersTableBody.innerHTML = '';
   users.forEach(u => {
     const row = document.createElement('tr');
-    
+
     // Formater la date de création
     let createdDate = 'N/A';
     if (u.createdAt) {
@@ -401,7 +426,7 @@ async function executeSurrealQuery() {
   if (!query) return;
 
   surrealConsoleOutput.textContent = 'Exécution de la requête en cours...';
-  
+
   try {
     const res = await fetch('/api/admin/query', {
       method: 'POST',
@@ -409,10 +434,10 @@ async function executeSurrealQuery() {
       body: JSON.stringify({ query })
     });
     const data = await res.json();
-    
+
     surrealConsoleOutput.textContent = JSON.stringify(data, null, 2);
     surrealConsoleOutput.scrollTop = 0;
-    
+
     // Si la requête modifie des données, recharger la liste des utilisateurs
     if (query.toUpperCase().includes('CREATE') || query.toUpperCase().includes('UPDATE') || query.toUpperCase().includes('DELETE') || query.toUpperCase().includes('INSERT')) {
       loadAdminData();
@@ -439,7 +464,7 @@ async function fetchLogs() {
     const res = await fetch('/api/logs', { headers: getHeaders() });
     if (!res.ok) return;
     const logs = await res.json();
-    
+
     // Éviter de re-render si aucun nouveau log
     const logsJsonString = JSON.stringify(logs);
     if (logsJsonString === logCacheJson) return;
@@ -469,14 +494,14 @@ function renderLogs(logs) {
     const timeStr = new Date(log.timestamp).toLocaleTimeString();
     const line = document.createElement('div');
     line.className = 'log-line';
-    
+
     line.innerHTML = `
       <span class="log-time">[${timeStr}]</span>
       <span class="log-level level-${log.level}">${log.level}</span>
       <span class="log-msg">${escapeHTML(log.message)}</span>
       <span class="log-source">${log.source}</span>
     `;
-    
+
     logsConsole.appendChild(line);
   });
 
@@ -491,7 +516,7 @@ logFilterButtons.forEach(btn => {
     logFilterButtons.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeLogLevelFilter = btn.getAttribute('data-level');
-    
+
     try {
       const logs = JSON.parse(logCacheJson || '[]');
       renderLogs(logs);
