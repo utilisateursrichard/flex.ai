@@ -1,49 +1,91 @@
-// Configuration & Variables globales
-let activeLogLevelFilter = 'all';
+// --- CONFIGURATION & ÉTAT GLOBAL ---
+let currentUser = null;
 let systemSpecsLoaded = false;
 let logCacheJson = '';
+let statusIntervalId = null;
+let logsIntervalId = null;
 
-// Références DOM
-const statusIndicator = document.getElementById('status-indicator');
-const statusText = document.getElementById('status-text');
+// --- RÉFÉRENCES DOM ---
+
+// Écrans
+const authScreen = document.getElementById('auth-screen');
+const dashboardScreen = document.getElementById('dashboard-screen');
+
+// Formulaires d'Auth
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+const authAlert = document.getElementById('auth-alert');
+const goToRegister = document.getElementById('go-to-register');
+const goToLogin = document.getElementById('go-to-login');
+
+// Inputs Auth
+const loginUsernameInput = document.getElementById('login-username');
+const loginPasswordInput = document.getElementById('login-password');
+const registerNameInput = document.getElementById('register-name');
+const registerUsernameInput = document.getElementById('register-username');
+const registerPasswordInput = document.getElementById('register-password');
+
+// Informations Utilisateur
+const userDisplayName = document.getElementById('user-display-name');
+const userRoleBadge = document.getElementById('user-role-badge');
+const avatarChar = document.getElementById('avatar-char');
+const btnLogout = document.getElementById('btn-logout');
+
+// Éléments du Dashboard
 const uptimeValue = document.getElementById('uptime-value');
 const cpuValue = document.getElementById('cpu-value');
 const cpuCircle = document.getElementById('cpu-circle');
 const ramPercentage = document.getElementById('ram-percentage');
 const ramDetails = document.getElementById('ram-details');
 const ramProgress = document.getElementById('ram-progress');
-const heapUsage = document.getElementById('heap-usage');
 const requestCount = document.getElementById('request-count');
-const latencyValue = document.getElementById('latency-value');
-const latencyBadge = document.getElementById('latency-badge');
+const dbStatusText = document.getElementById('db-status-text');
 const systemSpecs = document.getElementById('system-specs');
 
-const configForm = document.getElementById('config-form');
-const latencyRange = document.getElementById('latency-range');
-const latencySliderVal = document.getElementById('latency-slider-val');
-const maintenanceToggle = document.getElementById('maintenance-toggle');
+// Panels selon le rôle
+const adminPanel = document.getElementById('admin-panel');
+const userPanel = document.getElementById('user-panel');
 
-const btnTestOk = document.getElementById('btn-test-ok');
-const btnTestError = document.getElementById('btn-test-error');
-const jsonViewer = document.getElementById('json-viewer');
-
+// Éléments Admin
+const usersCount = document.getElementById('users-count');
+const usersTableBody = document.getElementById('users-table-body');
+const surrealQueryInput = document.getElementById('surreal-query-input');
+const btnRunQuery = document.getElementById('btn-run-query');
+const surrealConsoleOutput = document.getElementById('surreal-console-output');
+const presetButtons = document.querySelectorAll('.btn-preset');
 const logsConsole = document.getElementById('logs-console');
-const btnClearLogs = document.getElementById('btn-clear-logs');
-const filterButtons = document.querySelectorAll('.filter-btn');
+const logFilterButtons = document.querySelectorAll('.filter-btn');
 
-// Initialiser le cercle de progression CPU
-const radius = cpuCircle.r.baseVal.value;
-const circumference = radius * 2 * Math.PI;
-cpuCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-cpuCircle.style.strokeDashoffset = circumference;
+// Éléments Standard User
+const welcomeUserName = document.getElementById('welcome-user-name');
+const userLatencyVal = document.getElementById('user-latency-val');
+
+// --- INITIALISATION DU GRAPH CPU (Cercle SVG) ---
+let circumference = 0;
+if (cpuCircle) {
+  const radius = cpuCircle.r.baseVal.value;
+  circumference = radius * 2 * Math.PI;
+  cpuCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+  cpuCircle.style.strokeDashoffset = circumference;
+}
 
 function setCpuProgress(percent) {
+  if (!cpuCircle || !cpuValue) return;
   const offset = circumference - (percent / 100 * circumference);
   cpuCircle.style.strokeDashoffset = offset;
   cpuValue.textContent = `${percent}%`;
 }
 
-// Formater l'uptime en HH:MM:SS
+// --- UTILS ET FORMATAGE ---
+
+function getHeaders() {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+}
+
 function formatUptime(seconds) {
   const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
   const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
@@ -51,7 +93,6 @@ function formatUptime(seconds) {
   return `${h}:${m}:${s}`;
 }
 
-// Formater la taille des octets
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -59,130 +100,6 @@ function formatBytes(bytes, decimals = 2) {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-// Récupérer le statut du serveur
-async function fetchServerStatus() {
-  try {
-    const res = await fetch('/api/status');
-    if (!res.ok) throw new Error('Erreur HTTP');
-    const data = await res.json();
-
-    // Mettre à jour le statut en ligne/maintenance
-    if (data.status === 'online') {
-      statusIndicator.className = 'status-badge status-online';
-      statusText.textContent = 'EN LIGNE';
-    } else {
-      statusIndicator.className = 'status-badge status-maintenance';
-      statusText.textContent = 'MAINTENANCE';
-    }
-
-    // Uptime
-    uptimeValue.textContent = formatUptime(data.uptime);
-
-    // CPU
-    setCpuProgress(data.simulatedCpu);
-
-    // RAM
-    const totalMem = data.system.memory.total;
-    const usedMem = data.system.memory.used;
-    const usedPercent = Math.round((usedMem / totalMem) * 100);
-    ramPercentage.textContent = `${usedPercent}%`;
-    ramDetails.textContent = `${formatBytes(usedMem, 1)} / ${formatBytes(totalMem, 1)}`;
-    ramProgress.style.width = `${usedPercent}%`;
-    heapUsage.textContent = `Processus Node.js : ${formatBytes(data.system.memory.processUsed, 2)}`;
-
-    // Requêtes
-    requestCount.textContent = data.requestCount;
-
-    // Latence active
-    const latency = data.simulatedLatency;
-    latencyValue.textContent = `${latency}ms`;
-    if (latency === 0) {
-      latencyBadge.className = 'badge-pill pill-green';
-      latencyBadge.textContent = 'INSTANTANÉ';
-    } else if (latency <= 500) {
-      latencyBadge.className = 'badge-pill pill-orange';
-      latencyBadge.textContent = 'MODÉRÉ';
-    } else {
-      latencyBadge.className = 'badge-pill pill-red';
-      latencyBadge.textContent = 'TRÈS LENT';
-    }
-
-    // Charger les specs système une seule fois
-    if (!systemSpecsLoaded) {
-      const sys = data.system;
-      systemSpecs.textContent = `OS: ${sys.platform} (${sys.arch}) | CPU: ${sys.cpuCount} Cores`;
-      // Synchroniser le formulaire au premier chargement
-      latencyRange.value = latency;
-      latencySliderVal.textContent = `${latency}ms`;
-      maintenanceToggle.checked = data.maintenanceMode;
-      systemSpecsLoaded = true;
-    }
-
-  } catch (err) {
-    console.error('Erreur lors de la récupération du statut:', err);
-    statusIndicator.className = 'status-badge status-maintenance';
-    statusText.textContent = 'HORS LIGNE';
-    uptimeValue.textContent = '--:--:--';
-    setCpuProgress(0);
-  }
-}
-
-// Récupérer les logs
-async function fetchLogs() {
-  try {
-    const res = await fetch('/api/logs');
-    if (!res.ok) throw new Error('Erreur de logs');
-    const logs = await res.json();
-    
-    // Comparer avec le cache pour éviter les re-renders inutiles
-    const logsJsonString = JSON.stringify(logs);
-    if (logsJsonString === logCacheJson) return;
-    logCacheJson = logsJsonString;
-
-    renderLogs(logs);
-  } catch (err) {
-    console.error('Erreur lors de la récupération des logs:', err);
-  }
-}
-
-// Afficher les logs dans la console
-function renderLogs(logs) {
-  const isScrolledToBottom = logsConsole.scrollHeight - logsConsole.clientHeight <= logsConsole.scrollTop + 10;
-  
-  logsConsole.innerHTML = '';
-  
-  const filteredLogs = logs.filter(log => {
-    if (activeLogLevelFilter === 'all') return true;
-    return log.level === activeLogLevelFilter;
-  });
-
-  if (filteredLogs.length === 0) {
-    logsConsole.innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Aucun log disponible pour ce filtre.</div>`;
-    return;
-  }
-
-  filteredLogs.forEach(log => {
-    const timeStr = new Date(log.timestamp).toLocaleTimeString();
-    
-    const line = document.createElement('div');
-    line.className = 'log-line';
-    
-    line.innerHTML = `
-      <span class="log-time">[${timeStr}]</span>
-      <span class="log-level level-${log.level}">${log.level}</span>
-      <span class="log-msg">${escapeHTML(log.message)}</span>
-      <span class="log-source">${log.source}</span>
-    `;
-    
-    logsConsole.appendChild(line);
-  });
-
-  // Défilement automatique vers le bas si l'utilisateur était déjà en bas
-  if (isScrolledToBottom) {
-    logsConsole.scrollTop = logsConsole.scrollHeight;
-  }
 }
 
 function escapeHTML(str) {
@@ -197,123 +114,384 @@ function escapeHTML(str) {
   );
 }
 
-// Mettre à jour l'affichage du slider en direct
-latencyRange.addEventListener('input', (e) => {
-  latencySliderVal.textContent = `${e.target.value}ms`;
+// --- GESTION DES NOTIFICATIONS D'AUTH ---
+function showAlert(message, type = 'error') {
+  authAlert.textContent = message;
+  authAlert.className = `alert-box ${type}`;
+  setTimeout(() => {
+    authAlert.className = 'alert-box hide';
+  }, 5000);
+}
+
+// --- BASCULE DE VUES (Login vs Register) ---
+goToRegister.addEventListener('click', (e) => {
+  e.preventDefault();
+  loginForm.classList.add('hide');
+  registerForm.classList.remove('hide');
+  authAlert.className = 'alert-box hide';
 });
 
-// Enregistrer la configuration du serveur
-configForm.addEventListener('submit', async (e) => {
+goToLogin.addEventListener('click', (e) => {
   e.preventDefault();
-  
-  const latency = parseInt(latencyRange.value);
-  const maintenance = maintenanceToggle.checked;
-  
+  registerForm.classList.add('hide');
+  loginForm.classList.remove('hide');
+  authAlert.className = 'alert-box hide';
+});
+
+// --- GESTION ROUTING / ÉTAT DE SESSION ---
+async function checkAuthSession() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    showAuthView();
+    return;
+  }
+
   try {
-    const res = await fetch('/api/settings', {
+    const res = await fetch('/api/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      currentUser = data.user;
+      showDashboardView();
+    } else {
+      localStorage.removeItem('token');
+      showAuthView();
+    }
+  } catch (err) {
+    console.error('Erreur session:', err);
+    showAuthView();
+  }
+}
+
+function showAuthView() {
+  stopIntervals();
+  currentUser = null;
+  dashboardScreen.classList.add('hide');
+  authScreen.classList.remove('hide');
+}
+
+function showDashboardView() {
+  authScreen.classList.add('hide');
+  dashboardScreen.classList.remove('hide');
+
+  // Mettre à jour les infos utilisateur dans le header
+  userDisplayName.textContent = currentUser.name;
+  userRoleBadge.textContent = currentUser.role;
+  userRoleBadge.className = `user-role-badge ${currentUser.role}`;
+  avatarChar.textContent = currentUser.name.charAt(0);
+
+  // Basculer l'affichage selon le rôle
+  if (currentUser.role === 'admin') {
+    adminPanel.classList.remove('hide');
+    userPanel.classList.add('hide');
+    loadAdminData();
+    startAdminIntervals();
+  } else {
+    adminPanel.classList.add('hide');
+    userPanel.classList.remove('hide');
+    welcomeUserName.textContent = currentUser.name;
+    startUserIntervals();
+  }
+}
+
+function stopIntervals() {
+  if (statusIntervalId) clearInterval(statusIntervalId);
+  if (logsIntervalId) clearInterval(logsIntervalId);
+  statusIntervalId = null;
+  logsIntervalId = null;
+  systemSpecsLoaded = false;
+  logCacheJson = '';
+}
+
+// --- FORMULAIRES API INTERACTION ---
+
+// Connexion
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = loginUsernameInput.value;
+  const password = loginPasswordInput.value;
+
+  try {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ latency, maintenance })
+      body: JSON.stringify({ username, password })
     });
-    
     const data = await res.json();
-    
-    // Afficher le retour dans le visualiseur JSON
-    showJsonResponse({
-      action: 'Mise à jour de la configuration',
-      status: res.status,
-      response: data
-    });
-    
-    // Forcer la mise à jour immédiate des métriques
-    fetchServerStatus();
-    fetchLogs();
+
+    if (res.ok) {
+      localStorage.setItem('token', data.token);
+      currentUser = data.user;
+      loginUsernameInput.value = '';
+      loginPasswordInput.value = '';
+      showDashboardView();
+    } else {
+      showAlert(data.message || 'Échec de la connexion.');
+    }
   } catch (err) {
-    showJsonResponse({ error: 'Échec de la configuration', details: err.message });
+    showAlert('Une erreur réseau s\'est produite.');
   }
 });
 
-// Afficher les réponses d'API dans la console interactive
-function showJsonResponse(data) {
-  jsonViewer.textContent = JSON.stringify(data, null, 2);
-  jsonViewer.scrollTop = 0;
+// Inscription
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = registerNameInput.value;
+  const username = registerUsernameInput.value;
+  const password = registerPasswordInput.value;
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, username, password })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem('token', data.token);
+      currentUser = data.user;
+      registerNameInput.value = '';
+      registerUsernameInput.value = '';
+      registerPasswordInput.value = '';
+      registerForm.classList.add('hide');
+      loginForm.classList.remove('hide');
+      showDashboardView();
+    } else {
+      showAlert(data.message || 'Échec de l\'inscription.');
+    }
+  } catch (err) {
+    showAlert('Une erreur réseau s\'est produite.');
+  }
+});
+
+// Déconnexion
+btnLogout.addEventListener('click', async () => {
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: getHeaders()
+    });
+  } catch (err) {
+    console.error('Erreur lors du logout:', err);
+  } finally {
+    localStorage.removeItem('token');
+    showAuthView();
+  }
+});
+
+// --- RENSEIGNER LES MÈTRIQUES EN TEMPS RÉEL ---
+
+async function fetchStatus() {
+  try {
+    const res = await fetch('/api/status', {
+      headers: getHeaders()
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        localStorage.removeItem('token');
+        showAuthView();
+        return;
+      }
+      throw new Error('Erreur statut');
+    }
+    const data = await res.json();
+
+    // Mettre à jour l'Uptime
+    uptimeValue.textContent = formatUptime(data.uptime);
+
+    // Mettre à jour le CPU
+    setCpuProgress(data.simulatedCpu);
+
+    // Mettre à jour la RAM
+    const totalMem = data.system.memory.total;
+    const usedMem = data.system.memory.used;
+    const usedPercent = Math.round((usedMem / totalMem) * 100);
+    ramPercentage.textContent = `${usedPercent}%`;
+    ramDetails.textContent = `${formatBytes(usedMem, 1)} / ${formatBytes(totalMem, 1)}`;
+    ramProgress.style.width = `${usedPercent}%`;
+
+    // Requêtes
+    requestCount.textContent = data.requestCount;
+
+    // Latence utilisateur
+    if (userLatencyVal) {
+      userLatencyVal.textContent = `${data.simulatedLatency}ms`;
+    }
+
+    // Charger les specs système une seule fois
+    if (!systemSpecsLoaded) {
+      const sys = data.system;
+      systemSpecs.textContent = `OS: ${sys.platform} (${sys.arch}) | CPU: ${sys.cpuCount} Cores`;
+      systemSpecsLoaded = true;
+    }
+
+    dbStatusText.textContent = 'EN LIGNE';
+    dbStatusText.className = 'status-online-text';
+
+  } catch (err) {
+    console.error('Erreur fetchStatus:', err);
+    dbStatusText.textContent = 'HORS LIGNE';
+    dbStatusText.className = 'text-red';
+  }
 }
 
-// Tester un endpoint
-async function testEndpoint(url, name) {
-  jsonViewer.textContent = `Appel de ${url} en cours...`;
-  const startTime = performance.now();
+// --- INTERVALLES ---
+function startUserIntervals() {
+  fetchStatus();
+  statusIntervalId = setInterval(fetchStatus, 2000);
+}
+
+function startAdminIntervals() {
+  fetchStatus();
+  fetchLogs();
+  statusIntervalId = setInterval(fetchStatus, 1500);
+  logsIntervalId = setInterval(fetchLogs, 2500);
+}
+
+// --- DONNÉES SPÉCIFIQUES ADMIN ---
+
+async function loadAdminData() {
+  // Charger la liste des utilisateurs
+  try {
+    const res = await fetch('/api/admin/users', { headers: getHeaders() });
+    if (res.ok) {
+      const users = await res.json();
+      usersCount.textContent = users.length;
+      renderUsersTable(users);
+    }
+  } catch (err) {
+    console.error('Erreur chargement utilisateurs admin:', err);
+  }
+}
+
+function renderUsersTable(users) {
+  usersTableBody.innerHTML = '';
+  users.forEach(u => {
+    const row = document.createElement('tr');
+    
+    // Formater la date de création
+    let createdDate = 'N/A';
+    if (u.createdAt) {
+      createdDate = new Date(u.createdAt).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    row.innerHTML = `
+      <td style="font-weight: 600;">${escapeHTML(u.name)}</td>
+      <td class="font-mono text-cyan" style="font-size: 0.8rem;">${escapeHTML(u.username)}</td>
+      <td><span class="pill-badge" style="background: ${u.role === 'admin' ? 'rgba(245,158,11,0.1)' : 'rgba(6,182,212,0.1)'}; color: ${u.role === 'admin' ? 'var(--warning)' : 'var(--secondary)'}; border-color: transparent;">${u.role}</span></td>
+      <td style="color: var(--text-muted); font-size: 0.8rem;">${createdDate}</td>
+    `;
+    usersTableBody.appendChild(row);
+  });
+}
+
+// Console SurrealQL
+btnRunQuery.addEventListener('click', executeSurrealQuery);
+
+async function executeSurrealQuery() {
+  const query = surrealQueryInput.value.trim();
+  if (!query) return;
+
+  surrealConsoleOutput.textContent = 'Exécution de la requête en cours...';
   
   try {
-    const res = await fetch(url);
-    const endTime = performance.now();
-    const duration = Math.round(endTime - startTime);
+    const res = await fetch('/api/admin/query', {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ query })
+    });
+    const data = await res.json();
     
-    let body;
-    const contentType = res.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      body = await res.json();
-    } else {
-      body = await res.text();
+    surrealConsoleOutput.textContent = JSON.stringify(data, null, 2);
+    surrealConsoleOutput.scrollTop = 0;
+    
+    // Si la requête modifie des données, recharger la liste des utilisateurs
+    if (query.toUpperCase().includes('CREATE') || query.toUpperCase().includes('UPDATE') || query.toUpperCase().includes('DELETE') || query.toUpperCase().includes('INSERT')) {
+      loadAdminData();
     }
-    
-    const headers = {};
-    res.headers.forEach((val, key) => {
-      headers[key] = val;
-    });
-
-    showJsonResponse({
-      request: {
-        endpoint: url,
-        method: 'GET',
-        simulatedLatency: `${latencyRange.value}ms`
-      },
-      response: {
-        status: `${res.status} ${res.statusText}`,
-        time: `${duration}ms`,
-        headers: {
-          'content-type': headers['content-type'],
-          'connection': headers['connection']
-        },
-        body: body
-      }
-    });
-
-    // Mettre à jour immédiatement
-    fetchServerStatus();
-    fetchLogs();
-
   } catch (err) {
-    showJsonResponse({
-      error: `Échec du test sur ${name}`,
-      message: err.message
-    });
+    surrealConsoleOutput.textContent = `Erreur de communication : ${err.message}`;
   }
 }
 
-// Actions de test
-btnTestOk.addEventListener('click', () => {
-  testEndpoint('/api/test-endpoint', '/api/test-endpoint');
-});
-
-btnTestError.addEventListener('click', () => {
-  testEndpoint('/api/trigger-error', '/api/trigger-error');
-});
-
-// Vider localement l'historique dans l'interface
-btnClearLogs.addEventListener('click', () => {
-  logsConsole.innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Historique de la console vidé.</div>`;
-  logCacheJson = '[]';
-});
-
-// Filtres de niveau de logs
-filterButtons.forEach(btn => {
+// Preset Queries de la console SurrealQL
+presetButtons.forEach(btn => {
   btn.addEventListener('click', () => {
-    filterButtons.forEach(b => b.classList.remove('active'));
+    const query = btn.getAttribute('data-query');
+    surrealQueryInput.value = query;
+    executeSurrealQuery();
+  });
+});
+
+// Renseigner les logs
+let activeLogLevelFilter = 'all';
+
+async function fetchLogs() {
+  try {
+    const res = await fetch('/api/logs', { headers: getHeaders() });
+    if (!res.ok) return;
+    const logs = await res.json();
+    
+    // Éviter de re-render si aucun nouveau log
+    const logsJsonString = JSON.stringify(logs);
+    if (logsJsonString === logCacheJson) return;
+    logCacheJson = logsJsonString;
+
+    renderLogs(logs);
+  } catch (err) {
+    console.error('Erreur logs:', err);
+  }
+}
+
+function renderLogs(logs) {
+  const isScrolledToBottom = logsConsole.scrollHeight - logsConsole.clientHeight <= logsConsole.scrollTop + 10;
+  logsConsole.innerHTML = '';
+
+  const filteredLogs = logs.filter(log => {
+    if (activeLogLevelFilter === 'all') return true;
+    return log.level === activeLogLevelFilter;
+  });
+
+  if (filteredLogs.length === 0) {
+    logsConsole.innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Aucun log disponible pour ce filtre.</div>`;
+    return;
+  }
+
+  filteredLogs.forEach(log => {
+    const timeStr = new Date(log.timestamp).toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    
+    line.innerHTML = `
+      <span class="log-time">[${timeStr}]</span>
+      <span class="log-level level-${log.level}">${log.level}</span>
+      <span class="log-msg">${escapeHTML(log.message)}</span>
+      <span class="log-source">${log.source}</span>
+    `;
+    
+    logsConsole.appendChild(line);
+  });
+
+  if (isScrolledToBottom) {
+    logsConsole.scrollTop = logsConsole.scrollHeight;
+  }
+}
+
+// Filtres de logs
+logFilterButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    logFilterButtons.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeLogLevelFilter = btn.getAttribute('data-level');
     
-    // Forcer le re-rendu immédiat des logs
     try {
       const logs = JSON.parse(logCacheJson || '[]');
       renderLogs(logs);
@@ -323,9 +501,5 @@ filterButtons.forEach(btn => {
   });
 });
 
-// Démarrer les boucles de mise à jour périodiques
-fetchServerStatus();
-fetchLogs();
-
-setInterval(fetchServerStatus, 1500);
-setInterval(fetchLogs, 2500);
+// --- Lancement au chargement de la page ---
+checkAuthSession();
