@@ -8,7 +8,7 @@
     "dev": "node --watch server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "utilisateur_richard",
   "license": "AGPL-3.0-only",
   "dependencies": {
     "express": "^4.21.2"
