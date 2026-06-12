@@ -1,0 +1,16 @@
+{
+  "name": "web-server-prototype",
+  "version": "1.0.0",
+  "description": "Un prototype de serveur web interactif avec tableau de bord moderne",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flex.ai - Prototype de Serveur Web</title>
+  <!-- Google Fonts : Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="glass-bg"></div>
+  
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">
+          <h1>FlexNode <span>Engine</span></h1>
+          <p>Prototype de serveur web haute performance</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <div id="status-indicator" class="status-badge status-online">
+          <span class="pulse-dot"></span>
+          <span id="status-text">EN LIGNE</span>
+        </div>
+        <div class="uptime-box">
+          <span class="label">Uptime :</span>
+          <span id="uptime-value" class="value">00:00:00</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="grid-layout">
+      
+      <!-- Metrics Section (Top Full or Left) -->
+      <section class="metrics-grid">
+        <!-- Metric Card: CPU -->
+        <div class="metric-card card-cpu">
+          <div class="metric-header">
+            <h3>Charge CPU</h3>
+            <span class="metric-icon">⚙️</span>
+          </div>
+          <div class="metric-body">
+            <div class="circle-progress-wrapper">
+              <svg class="progress-ring" width="120" height="120">
+                <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+                <circle id="cpu-circle" class="progress-ring__circle" stroke="url(#cpu-gradient)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+                <defs>
+                  <linearGradient id="cpu-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#00F5D4" />
+                    <stop offset="100%" stop-color="#00B4D8" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div id="cpu-value" class="circle-val">0%</div>
+            </div>
+          </div>
+          <div class="metric-footer">
+            <span class="subtext">Simulé en temps réel</span>
+          </div>
+        </div>
+
+        <!-- Metric Card: Memory -->
+        <div class="metric-card card-memory">
+          <div class="metric-header">
+            <h3>Mémoire RAM</h3>
+            <span class="metric-icon">🧠</span>
+          </div>
+          <div class="metric-body">
+            <div class="memory-display">
+              <span id="ram-percentage" class="main-val">0%</span>
+              <span id="ram-details" class="sub-val">0 MB / 0 MB</span>
+            </div>
+            <div class="progress-bar-container">
+              <div id="ram-progress" class="progress-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="metric-footer">
+            <span class="subtext" id="heap-usage">Processus : 0.00 MB</span>
+          </div>
+        </div>
+
+        <!-- Metric Card: Requests -->
+        <div class="metric-card card-requests">
+          <div class="metric-header">
+            <h3>Requêtes Traitées</h3>
+            <span class="metric-icon">📊</span>
+          </div>
+          <div class="metric-body">
+            <div class="count-display">
+              <span id="request-count" class="counter">0</span>
+            </div>
+          </div>
+          <div class="metric-footer">
+            <span class="subtext">Depuis le démarrage</span>
+          </div>
+        </div>
+
+        <!-- Metric Card: Latency -->
+        <div class="metric-card card-latency">
+          <div class="metric-header">
+            <h3>Latence Active</h3>
+            <span class="metric-icon">⏳</span>
+          </div>
+          <div class="metric-body">
+            <div class="latency-display">
+              <span id="latency-value" class="main-val font-mono">0ms</span>
+            </div>
+            <div class="latency-status">
+              <span id="latency-badge" class="badge-pill pill-green">INSTANTANÉ</span>
+            </div>
+          </div>
+          <div class="metric-footer">
+            <span class="subtext">Retard simulé de l'API</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel: Configuration -->
+      <section class="panel panel-config">
+        <div class="panel-header">
+          <h2>🔧 Configuration du Serveur</h2>
+        </div>
+        <div class="panel-body">
+          <form id="config-form" class="config-form">
+            <!-- Latency Control -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <label for="latency-range">Simuler de la latence réseau</label>
+                <span id="latency-slider-val" class="badge-value">0ms</span>
+              </div>
+              <input type="range" id="latency-range" min="0" max="2000" step="50" value="0" class="styled-slider">
+              <div class="slider-labels">
+                <span>0ms (Rapide)</span>
+                <span>1000ms</span>
+                <span>2000ms (Lent)</span>
+              </div>
+            </div>
+
+            <!-- Maintenance Mode Control -->
+            <div class="form-group">
+              <div class="toggle-control">
+                <div class="toggle-text">
+                  <span class="toggle-title">Mode Maintenance</span>
+                  <span class="toggle-desc">Bloque les accès externes (Retourne un statut 503)</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="maintenance-toggle">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" id="save-config-btn" class="btn btn-primary">Enregistrer la configuration</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Panel: API Tester -->
+      <section class="panel panel-tester">
+        <div class="panel-header">
+          <h2>🧪 Testeur d'Endpoints API</h2>
+        </div>
+        <div class="panel-body">
+          <div class="tester-buttons">
+            <button id="btn-test-ok" class="btn btn-secondary">
+              <span class="method get">GET</span>
+              <span class="path">/api/test-endpoint</span>
+            </button>
+            <button id="btn-test-error" class="btn btn-danger">
+              <span class="method get">GET</span>
+              <span class="path">/api/trigger-error</span>
+            </button>
+          </div>
+          
+          <div class="terminal-response">
+            <div class="terminal-titlebar">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+              <span class="terminal-title">Console HTTP Response</span>
+            </div>
+            <pre id="json-viewer" class="json-viewer">Cliquez sur un endpoint ci-dessus pour lancer un test...</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel: Logs Console (Full Width at the bottom or spans 2 columns) -->
+      <section class="panel panel-logs">
+        <div class="panel-header logs-header-row">
+          <h2>📋 Console de Logs Système</h2>
+          <div class="logs-actions">
+            <div class="filter-buttons">
+              <button class="filter-btn active" data-level="all">Tous</button>
+              <button class="filter-btn" data-level="info">Info</button>
+              <button class="filter-btn" data-level="warn">Warn</button>
+              <button class="filter-btn" data-level="error">Error</button>
+            </div>
+            <button id="btn-clear-logs" class="btn-icon" title="Effacer la console">🗑️</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="logs-console" id="logs-console">
+            <!-- Logs entries are injected here -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Prototype de serveur web • Développé avec Node.js, Express &amp; Vanilla CSS</p>
+      <div class="system-specs" id="system-specs">Chargement des spécifications système...</div>
+    </footer>
+  </div>
+
+  <!-- JavaScript App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
