@@ -3,6 +3,9 @@ version: '3.8'
 services:
   app:
     build: .
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "3000:3000"
     environment:
@@ -25,6 +28,9 @@ services:
 
   caddy:
     image: caddy:latest
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "80:80"
       - "443:443"
