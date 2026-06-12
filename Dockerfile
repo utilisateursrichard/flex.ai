@@ -3,11 +3,7 @@ FROM node:20-slim
 WORKDIR /app
 
 COPY package*.json ./
-<<<<<<< HEAD
-RUN npm ci --only=production
-=======
 RUN npm install --omit=dev
->>>>>>> 6397836 (correction fo dockerfile, changement of the deployement from npm ci to npm install)
 
 COPY . .
 
