@@ -46,10 +46,7 @@ const btnOpenLogin = document.getElementById('btn-open-login');
 const btnCloseAuth = document.getElementById('btn-close-auth');
 const btnHeroStart = document.getElementById('btn-hero-start');
 
-// --- UTILS ---
-function setTokenCookie(token) {
-  document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Strict`;
-}
+
 
 function showAlert(message, type = 'error') {
   if (authAlert) {
@@ -98,8 +95,6 @@ if (loginForm) {
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem('token', data.token);
-        setTokenCookie(data.token);
         loginUsernameInput.value = '';
         loginPasswordInput.value = '';
         window.location.href = '/chat';
@@ -129,8 +124,6 @@ if (registerForm) {
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem('token', data.token);
-        setTokenCookie(data.token);
         registerNameInput.value = '';
         registerUsernameInput.value = '';
         registerPasswordInput.value = '';
@@ -181,19 +174,10 @@ document.querySelectorAll('.btn-pricing-select').forEach(btn => {
 
 // --- GESTION ROUTING / ÉTAT DE SESSION ---
 async function checkAuthSession() {
-  const token = localStorage.getItem('token');
-  if (!token) return;
-
   try {
-    const res = await fetch('/api/auth/me', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res = await fetch('/api/auth/me');
     if (res.ok) {
-      setTokenCookie(token); // rafraîchir cookie
       window.location.href = '/chat';
-    } else {
-      localStorage.removeItem('token');
-      document.cookie = 'token=; Max-Age=0; path=/;';
     }
   } catch (err) {
     console.error('Erreur session:', err);

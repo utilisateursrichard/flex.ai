@@ -101,10 +101,8 @@ function setCpuProgress(percent) {
 
 // --- UTILS ET FORMATAGE ---
 function getHeaders() {
-  const token = localStorage.getItem('token');
   return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    'Content-Type': 'application/json'
   };
 }
 
@@ -138,16 +136,8 @@ function escapeHTML(str) {
 
 // --- GESTION ROUTING / ÉTAT DE SESSION ---
 async function checkAuthSession() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    handleInvalidSession();
-    return;
-  }
-
   try {
-    const res = await fetch('/api/auth/me', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res = await fetch('/api/auth/me');
     if (res.ok) {
       const data = await res.json();
       currentUser = data.user;
@@ -162,8 +152,6 @@ async function checkAuthSession() {
 }
 
 function handleInvalidSession() {
-  localStorage.removeItem('token');
-  document.cookie = 'token=; Max-Age=0; path=/;';
   window.location.replace('/');
 }
 

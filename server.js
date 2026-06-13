@@ -198,11 +198,10 @@ const sessions = new Map();
 
 // Middleware d'authentification
 function authenticate(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const token = getCookie(req, 'token');
+  if (!token) {
     return res.status(401).json({ error: 'Non autorisé', message: 'Token manquant ou invalide.' });
   }
-  const token = authHeader.substring(7);
   const session = sessions.get(token);
   if (!session) {
     return res.status(401).json({ error: 'Non autorisé', message: 'Session expirée ou invalide.' });
@@ -332,9 +331,13 @@ app.post('/api/auth/register', async (req, res) => {
 
     addLog('info', `Nouvel utilisateur inscrit : ${cleanUsername}`, 'security');
 
+    // Définir le cookie sécurisé HttpOnly
+    const isProduction = req.headers['x-forwarded-proto'] === 'https';
+    const secureFlag = isProduction ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `token=${token}; Path=/; Max-Age=86400; HttpOnly; SameSite=Strict${secureFlag}`);
+
     res.json({
       message: 'Inscription réussie',
-      token,
       user: userData
     });
   } catch (err) {
@@ -364,9 +367,13 @@ app.post('/api/auth/login', async (req, res) => {
 
         addLog('info', `Utilisateur connecté : ${cleanUsername} (${user.role})`, 'security');
 
+        // Définir le cookie sécurisé HttpOnly
+        const isProduction = req.headers['x-forwarded-proto'] === 'https';
+        const secureFlag = isProduction ? '; Secure' : '';
+        res.setHeader('Set-Cookie', `token=${token}; Path=/; Max-Age=86400; HttpOnly; SameSite=Strict${secureFlag}`);
+
         return res.json({
           message: 'Connexion réussie',
-          token,
           user: userData
         });
       }
@@ -382,10 +389,14 @@ app.post('/api/auth/login', async (req, res) => {
 
 // 3. Déconnexion (Logout)
 app.post('/api/auth/logout', authenticate, (req, res) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader.substring(7);
-  sessions.delete(token);
+  const token = getCookie(req, 'token');
+  if (token) {
+    sessions.delete(token);
+  }
   addLog('info', `Utilisateur déconnecté : ${req.user.username}`, 'security');
+  
+  // Supprimer le cookie
+  res.setHeader('Set-Cookie', 'token=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict');
   res.json({ message: 'Déconnexion réussie' });
 });
 
