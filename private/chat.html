@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flex.ai - Zone de chat</title>
+
+  <!-- Bloquer le rendu et rediriger immédiatement si aucun token local n'est présent -->
+  <script>
+    if (!localStorage.getItem('token')) {
+      document.cookie = 'token=; Max-Age=0; path=/;';
+      window.location.replace('/?error=unauthorized');
+    }
+  </script>
+
+  <!-- Google Fonts : Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <div class="glass-bg"></div>
+  <button id="btn-theme-toggle" class="btn-theme-toggle" title="Changer le thème">☀️</button>
+
+  <div class="app-layout">
+    <!-- MENU LATÉRAL (SIDEBAR) POUR HISTORIQUE ET PARAMÈTRES -->
+    <div id="sidebar-menu" class="sidebar-menu hide-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-icon" style="font-size: 1.4rem; animation: none;">⚡</div>
+          <span>Flex.ai</span>
+        </div>
+        <button id="btn-sidebar-close" class="btn-sidebar-close" title="Fermer le menu">&times;</button>
+      </div>
+
+      <div class="sidebar-body">
+        <button id="btn-new-chat" class="btn btn-primary btn-block">
+          <span>+</span> Nouvelle conversation
+        </button>
+
+        <div class="sidebar-section">
+          <h4 class="sidebar-section-title">Historique des conversations</h4>
+          <div class="history-list">
+            <!-- TODO : lier avec l'historique réel en SurrealDB -->
+            <div class="history-item placeholder-item">
+              <span class="history-icon">💬</span>
+              <span class="history-text">placeholder</span>
+            </div>
+            <div class="history-item placeholder-item">
+              <span class="history-icon">💬</span>
+              <span class="history-text">placeholder</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="btn-open-settings" class="btn btn-secondary btn-block">
+          ⚙️ Paramètres
+        </button>
+      </div>
+    </div>
+
+    <!-- ÉCRAN DASHBOARD -->
+    <div id="dashboard-screen" class="container">
+
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-logo">
+          <button id="btn-sidebar-toggle" class="btn-sidebar-toggle" title="Ouvrir le menu">☰</button>
+          <div class="logo-icon">⚡</div>
+          <div class="logo-text">
+            <h1>Flex.ai <span>Zone de chat</span></h1>
+            <p id="header-subtitle">Votre espace personnel intelligent</p>
+          </div>
+        </div>
+
+        <div class="header-user-info">
+          <div class="user-profile">
+            <span class="user-avatar" id="avatar-char">U</span>
+            <div class="user-details">
+              <span class="user-name" id="user-display-name">Chargement...</span>
+              <span class="user-role-badge" id="user-role-badge">USER</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Layout -->
+      <main class="grid-layout">
+
+        <!-- CONTENU ADMIN (Visible uniquement si admin) -->
+        <div id="admin-panel" class="admin-only-wrapper span-12 grid-layout no-gap hide">
+
+          <!-- Table des Utilisateurs -->
+          <section class="panel panel-users span-6">
+            <div class="panel-header">
+              <h2>👥 Utilisateurs Enregistrés</h2>
+              <span class="badge-count" id="users-count">0</span>
+            </div>
+            <div class="panel-body scrollable-body">
+              <div class="table-container">
+                <table class="users-table">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Identifiant</th>
+                      <th>Rôle</th>
+                      <th>Créé le</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-table-body">
+                    <!-- Injecté en JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- Console SurrealDB Interactive -->
+          <section class="panel panel-surreal-console span-6">
+            <div class="panel-header">
+              <h2>💻 Console SurrealQL Interactive</h2>
+              <span class="pill-badge">ADMIN ACCESS</span>
+            </div>
+            <div class="panel-body">
+              <p class="console-helper">Exécutez des requêtes SurrealQL en direct sur votre base de données.</p>
+
+              <div class="console-form">
+                <textarea id="surreal-query-input" placeholder="Ex: SELECT * FROM user;"></textarea>
+                <div class="console-actions">
+                  <button id="btn-run-query" class="btn btn-primary btn-sm">Exécuter la requête</button>
+                  <div class="preset-queries">
+                    <button class="btn-preset"
+                      data-query="SELECT id, username, name, role FROM user;">Utilisateurs</button>
+                    <button class="btn-preset" data-query="INFO FOR DB;">Infos DB</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="terminal-response">
+                <div class="terminal-titlebar">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                  <span class="terminal-title">SurrealDB Output</span>
+                </div>
+                <pre id="surreal-console-output"
+                  class="json-viewer">Les résultats de votre requête s'afficheront ici...</pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- Serveur Metrics & Logs additionnels -->
+          <section class="panel panel-logs span-12">
+            <div class="panel-header">
+              <h2>📋 Console de Logs Système (Temps Réel)</h2>
+              <div class="logs-actions">
+                <div class="filter-buttons">
+                  <button class="filter-btn active" data-level="all">Tous</button>
+                  <button class="filter-btn" data-level="info">Info</button>
+                  <button class="filter-btn" data-level="warn">Warn</button>
+                  <button class="filter-btn" data-level="error">Error</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="logs-console" id="logs-console">
+                <!-- Logs entries -->
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- CONTENU UTILISATEUR STANDARD (Interface Chatbot Épurée) -->
+        <div id="user-panel" class="user-only-wrapper span-12 hide">
+          <div id="chat-container" class="chat-container">
+            <!-- Écran d'accueil du Chat (Centré au départ) -->
+            <div id="chat-welcome" class="chat-welcome">
+              <h2 id="chat-greeting" class="chat-greeting">Bonjour, <span id="chat-user-name">Utilisateur</span></h2>
+              <p class="chat-subtitle">Comment puis-je vous aider aujourd'hui ?</p>
+            </div>
+
+            <!-- Zone d'affichage des messages (Masquée au départ) -->
+            <div id="chat-messages" class="chat-messages hide">
+              <!-- Les messages s'afficheront ici dynamiquement -->
+            </div>
+
+            <!-- Formulaire de saisie du Chat (S'anime vers le bas) -->
+            <div id="chat-input-area" class="chat-input-area">
+              <form id="chat-form" class="chat-form">
+                <input type="text" id="chat-input" placeholder="Posez votre question à Flex.ai..." required
+                  autocomplete="off">
+                <button type="submit" id="btn-chat-send" class="btn-chat-send" title="Envoyer">➔</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <p>Flex.ai est une IA et peut faire des erreurs, veuillez revérifier toutes les informations fournies.</p>
+      </footer>
+    </div>
+  </div>
+
+  <!-- MODALE PARAMÈTRES (PLACEHOLDER) -->
+  <div id="settings-modal" class="auth-container hide">
+    <div class="auth-card">
+      <button id="btn-close-settings" class="close-modal-btn" title="Fermer">&times;</button>
+      <div class="auth-header">
+        <div class="logo-icon">⚙️</div>
+        <h2>Paramètres <span>Flex.ai</span></h2>
+        <p>Configuration de votre espace personnel</p>
+      </div>
+
+      <div class="settings-placeholder-content"
+        style="text-align: center; margin: 2rem 0; color: var(--text-secondary);">
+        <!-- TODO : Implémenter les véritables options de configuration utilisateur -->
+        <p>placeholder</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button id="btn-logout" class="btn btn-danger btn-block">🚪 Se déconnecter</button>
+        <button id="btn-save-settings" class="btn btn-primary btn-block">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript App Logic -->
+  <script src="/chat.js"></script>
+</body>
+
+</html>

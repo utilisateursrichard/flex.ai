@@ -332,6 +332,17 @@ body {
   transform: translateY(-1px);
 }
 
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: white;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px);
+}
+
 .dark-theme .btn-primary {
   background: linear-gradient(135deg, var(--primary), #a78bfa);
 }
@@ -344,6 +355,13 @@ body {
 }
 .dark-theme .btn-secondary:hover {
   box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
+}
+.dark-theme .btn-danger {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+}
+.dark-theme .btn-danger:hover {
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.55);
 }
 
 /* --- DASHBOARD LAYOUT --- */
@@ -1430,34 +1448,6 @@ body {
   animation: float 2s infinite ease-in-out;
 }
 
-/* Stats metrics banner inside router infographic */
-.routing-metrics-banner {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--panel-border);
-  padding-top: 1.5rem;
-  gap: 1.5rem;
-}
-
-.metric-stat-item {
-  text-align: center;
-}
-
-.metric-stat-item .stat-num {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--primary);
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.metric-stat-item .stat-lbl {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-top: 0.25rem;
-  font-weight: 500;
-}
 
 /* Features grid */
 .features-section {
@@ -1661,19 +1651,18 @@ body {
 
 /* Menu Latéral (Sidebar) */
 .sidebar-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 280px;
   height: 100vh;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(25px);
   border-right: 1px solid var(--panel-border);
   box-shadow: 10px 0 40px rgba(0, 0, 0, 0.05);
-  z-index: 99999;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  transition: margin-left 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark-theme .sidebar-menu {
@@ -1682,7 +1671,7 @@ body {
 }
 
 .sidebar-menu.hide-sidebar {
-  transform: translateX(-100%);
+  margin-left: -280px;
 }
 
 .sidebar-header {
@@ -1969,4 +1958,113 @@ body {
 .chat-container:not(.has-messages) .chat-input-area {
   width: 100%;
   animation: fadeIn 0.6s ease;
+}
+
+/* Bandeau de développement sur la landing page */
+.dev-banner {
+  background: repeating-linear-gradient(
+    -45deg,
+    #fbbf24,
+    #fbbf24 15px,
+    #1e293b 15px,
+    #1e293b 30px
+  );
+  padding: 0.5rem;
+  margin-top: 1.5rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dev-banner-content {
+  background: #0f172a;
+  color: #fbbf24;
+  padding: 0.6rem 2rem;
+  font-weight: 800;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --- STYLE PLEIN ÉCRAN POUR L'APPLICATION (Pousse l'interface) --- */
+.app-layout {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-layout .container {
+  flex: 1;
+  max-width: none;
+  width: auto;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+.app-layout .app-header {
+  border-radius: 0;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  margin: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.app-layout main.grid-layout {
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-layout .admin-only-wrapper {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.app-layout .user-only-wrapper {
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-layout .chat-container {
+  flex: 1;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.app-layout .app-footer {
+  padding: 0.5rem 1.5rem;
+  margin: 0;
+  background: transparent;
+  border-top: 1px solid var(--panel-border);
+  font-size: 0.75rem;
 }

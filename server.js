@@ -265,6 +265,35 @@ app.use((req, res, next) => {
   next();
 });
 
+// Fonction utilitaire pour extraire les cookies
+function getCookie(req, name) {
+  const cookieHeader = req.headers.cookie;
+  if (!cookieHeader) return null;
+  const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+    const parts = cookie.split('=');
+    const k = parts[0] ? parts[0].trim() : '';
+    const v = parts[1] ? parts[1].trim() : '';
+    if (k && v) acc[k] = v;
+    return acc;
+  }, {});
+  return cookies[name] || null;
+}
+
+// Route sécurisée pour /chat (inaccessible si non connecté)
+app.get('/chat', (req, res) => {
+  const token = getCookie(req, 'token');
+  if (!token || !sessions.has(token)) {
+    addLog('warn', `Accès refusé à /chat pour un utilisateur non authentifié`, 'security');
+    return res.redirect('/?error=unauthorized');
+  }
+  res.sendFile(path.join(__dirname, 'private', 'chat.html'));
+});
+
+// Redirection de /chat.html vers /chat pour éviter l'erreur "Cannot GET /chat.html"
+app.get('/chat.html', (req, res) => {
+  res.redirect('/chat');
+});
+
 // Servir les fichiers statiques du frontend
 app.use(express.static(path.join(__dirname, 'public')));
 

@@ -21,6 +21,13 @@
 
   <!-- PAGE DE PRÉSENTATION (LANDING PAGE) -->
   <div id="landing-page-screen" class="landing-container">
+    <!-- Bandeau de développement -->
+    <div class="dev-banner">
+      <div class="dev-banner-content">
+        <span>⚠️</span> Ce SaaS est en cours de développement, vos données pourraient être détruites !
+      </div>
+    </div>
+
     <!-- En-tête -->
     <header class="landing-header">
       <a href="#" class="landing-logo">
@@ -43,7 +50,8 @@
         <span>⚡</span> Toutes vos IA dans un seul abonnement
       </div>
       <h1>Une seule interface pour <span>toutes les IA</span> du marché</h1>
-      <p>Discutez avec les meilleurs modèles du marché sans multiplier les abonnements. Flex.ai sélectionne automatiquement le modèle le plus adapté à votre demande pour optimiser l'utilisation de vos crédits.</p>
+      <p>Discutez avec les meilleurs modèles du marché sans multiplier les abonnements. Flex.ai sélectionne
+        automatiquement le modèle le plus adapté à votre demande pour optimiser l'utilisation de vos crédits.</p>
       <div class="hero-buttons">
         <button id="btn-hero-start" class="btn btn-primary">Démarrer gratuitement</button>
         <a href="#router" class="btn btn-secondary" style="text-decoration: none;">Voir comment ça marche</a>
@@ -81,7 +89,8 @@
           <div class="models-list">
             <div class="model-dest routed-inactive">
               <span>Modèle complexe (Raisonnement)</span>
-              <span class="cost-saving" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Consommation élevée</span>
+              <span class="cost-saving" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Consommation
+                élevée</span>
             </div>
             <div class="model-dest routed-active">
               <span>Modèle rapide (Tâches simples) ✓</span>
@@ -89,24 +98,9 @@
             </div>
             <div class="model-dest routed-inactive">
               <span>Modèle intermédiaire (Rédaction)</span>
-              <span class="cost-saving" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Consommation modérée</span>
+              <span class="cost-saving" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Consommation
+                modérée</span>
             </div>
-          </div>
-        </div>
-
-        <!-- Métriques du routeur -->
-        <div class="routing-metrics-banner">
-          <div class="metric-stat-item">
-            <div class="stat-num">-75%</div>
-            <div class="stat-lbl">Crédits préservés</div>
-          </div>
-          <div class="metric-stat-item">
-            <div class="stat-num">&lt; 0.1s</div>
-            <div class="stat-lbl">Temps de réponse</div>
-          </div>
-          <div class="metric-stat-item">
-            <div class="stat-num">100%</div>
-            <div class="stat-lbl">IA adaptée à votre demande</div>
           </div>
         </div>
       </div>
@@ -120,12 +114,14 @@
         <div class="feature-card">
           <div class="feature-icon">🛡️</div>
           <h3>Économie de crédits</h3>
-          <p>Vos questions simples utilisent des modèles légers et optimisés. Vos crédits sont ainsi préservés pour vos tâches les plus exigeantes.</p>
+          <p>Vos questions simples utilisent des modèles légers et optimisés. Vos crédits sont ainsi préservés pour vos
+            tâches les plus exigeantes.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔌</div>
           <h3>Interface Unique</h3>
-          <p>Accédez aux principaux modèles du marché au même endroit. Plus besoin de jongler entre différents abonnements ou de multiplier les forfaits payants.</p>
+          <p>Accédez aux principaux modèles du marché au même endroit. Plus besoin de jongler entre différents
+            abonnements ou de multiplier les forfaits payants.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📊</div>
@@ -237,211 +233,6 @@
     </div>
   </div>
 
-  <!-- MENU LATÉRAL (SIDEBAR) POUR HISTORIQUE ET PARAMÈTRES -->
-  <div id="sidebar-menu" class="sidebar-menu hide-sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <div class="logo-icon" style="font-size: 1.4rem; animation: none;">⚡</div>
-        <span>Flex.ai</span>
-      </div>
-      <button id="btn-sidebar-close" class="btn-sidebar-close" title="Fermer le menu">&times;</button>
-    </div>
-    
-    <div class="sidebar-body">
-      <button id="btn-new-chat" class="btn btn-primary btn-block">
-        <span>+</span> Nouvelle conversation
-      </button>
-      
-      <div class="sidebar-section">
-        <h4 class="sidebar-section-title">Historique des conversations</h4>
-        <div class="history-list">
-          <!-- TODO : lier avec l'historique réel en SurrealDB -->
-          <div class="history-item placeholder-item">
-            <span class="history-icon">💬</span>
-            <span class="history-text">placeholder</span>
-          </div>
-          <div class="history-item placeholder-item">
-            <span class="history-icon">💬</span>
-            <span class="history-text">placeholder</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="sidebar-footer">
-      <button id="btn-open-settings" class="btn btn-secondary btn-block">
-        ⚙️ Paramètres
-      </button>
-    </div>
-  </div>
-
-  <!-- ÉCRAN DASHBOARD (Masqué si déconnecté) -->
-  <div id="dashboard-screen" class="container hide">
-
-    <!-- Header -->
-    <header class="app-header">
-      <div class="header-logo">
-        <button id="btn-sidebar-toggle" class="btn-sidebar-toggle" title="Ouvrir le menu">☰</button>
-        <div class="logo-icon">⚡</div>
-        <div class="logo-text">
-          <h1>Flex.ai <span>Espace Membre</span></h1>
-          <p id="header-subtitle">Votre espace personnel intelligent</p>
-        </div>
-      </div>
-
-      <div class="header-user-info">
-        <div class="user-profile">
-          <span class="user-avatar" id="avatar-char">U</span>
-          <div class="user-details">
-            <span class="user-name" id="user-display-name">Chargement...</span>
-            <span class="user-role-badge" id="user-role-badge">USER</span>
-          </div>
-        </div>
-        <button id="btn-logout" class="btn-logout-icon" title="Se déconnecter">🚪</button>
-      </div>
-    </header>
-
-    <!-- Main Content Layout -->
-    <main class="grid-layout">
-
-      <!-- SECTION COMMUNE : Statut & Métriques Épurées (SUPPRIMÉE DANS LA VUE UTILISATEUR ET ADMIN COMMUNE POUR NETTOYAGE) -->
-
-      <!-- SECTION DYNAMIQUE : Selon le Rôle de l'utilisateur -->
-
-      <!-- CONTENU ADMIN (Visible uniquement si admin) -->
-      <div id="admin-panel" class="admin-only-wrapper span-12 grid-layout no-gap">
-
-        <!-- Table des Utilisateurs -->
-        <section class="panel panel-users span-6">
-          <div class="panel-header">
-            <h2>👥 Utilisateurs Enregistrés</h2>
-            <span class="badge-count" id="users-count">0</span>
-          </div>
-          <div class="panel-body scrollable-body">
-            <div class="table-container">
-              <table class="users-table">
-                <thead>
-                  <tr>
-                    <th>Nom</th>
-                    <th>Identifiant</th>
-                    <th>Rôle</th>
-                    <th>Créé le</th>
-                  </tr>
-                </thead>
-                <tbody id="users-table-body">
-                  <!-- Injecté en JS -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- Console SurrealDB Interactive -->
-        <section class="panel panel-surreal-console span-6">
-          <div class="panel-header">
-            <h2>💻 Console SurrealQL Interactive</h2>
-            <span class="pill-badge">ADMIN ACCESS</span>
-          </div>
-          <div class="panel-body">
-            <p class="console-helper">Exécutez des requêtes SurrealQL en direct sur votre base de données.</p>
-
-            <div class="console-form">
-              <textarea id="surreal-query-input" placeholder="Ex: SELECT * FROM user;"></textarea>
-              <div class="console-actions">
-                <button id="btn-run-query" class="btn btn-primary btn-sm">Exécuter la requête</button>
-                <div class="preset-queries">
-                  <button class="btn-preset"
-                    data-query="SELECT id, username, name, role FROM user;">Utilisateurs</button>
-                  <button class="btn-preset" data-query="INFO FOR DB;">Infos DB</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="terminal-response">
-              <div class="terminal-titlebar">
-                <span class="dot red"></span>
-                <span class="dot yellow"></span>
-                <span class="dot green"></span>
-                <span class="terminal-title">SurrealDB Output</span>
-              </div>
-              <pre id="surreal-console-output"
-                class="json-viewer">Les résultats de votre requête s'afficheront ici...</pre>
-            </div>
-          </div>
-        </section>
-
-        <!-- Serveur Metrics & Logs additionnels -->
-        <section class="panel panel-logs span-12">
-          <div class="panel-header">
-            <h2>📋 Console de Logs Système (Temps Réel)</h2>
-            <div class="logs-actions">
-              <div class="filter-buttons">
-                <button class="filter-btn active" data-level="all">Tous</button>
-                <button class="filter-btn" data-level="info">Info</button>
-                <button class="filter-btn" data-level="warn">Warn</button>
-                <button class="filter-btn" data-level="error">Error</button>
-              </div>
-            </div>
-          </div>
-          <div class="panel-body">
-            <div class="logs-console" id="logs-console">
-              <!-- Logs entries -->
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- CONTENU UTILISATEUR STANDARD (Interface Chatbot Épurée) -->
-      <div id="user-panel" class="user-only-wrapper span-12">
-        <div id="chat-container" class="chat-container">
-          <!-- Écran d'accueil du Chat (Centré au départ) -->
-          <div id="chat-welcome" class="chat-welcome">
-            <h2 id="chat-greeting" class="chat-greeting">Bonjour, <span id="chat-user-name">Utilisateur</span></h2>
-            <p class="chat-subtitle">Comment puis-je vous aider aujourd'hui ?</p>
-          </div>
-
-          <!-- Zone d'affichage des messages (Masquée au départ) -->
-          <div id="chat-messages" class="chat-messages hide">
-            <!-- Les messages s'afficheront ici dynamiquement -->
-          </div>
-
-          <!-- Formulaire de saisie du Chat (S'anime vers le bas) -->
-          <div id="chat-input-area" class="chat-input-area">
-            <form id="chat-form" class="chat-form">
-              <input type="text" id="chat-input" placeholder="Posez votre question à Flex.ai..." required autocomplete="off">
-              <button type="submit" id="btn-chat-send" class="btn-chat-send" title="Envoyer">➔</button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="app-footer">
-      <p>Flex ai Engine &bull; Alimenté par SurrealDB &bull; Vanilla CSS</p>
-      <div id="system-specs" class="system-specs">Détection du système en cours...</div>
-    </footer>
-  </div>
-
-  <!-- MODALE PARAMÈTRES (PLACEHOLDER) -->
-  <div id="settings-modal" class="auth-container hide">
-    <div class="auth-card">
-      <button id="btn-close-settings" class="close-modal-btn" title="Fermer">&times;</button>
-      <div class="auth-header">
-        <div class="logo-icon">⚙️</div>
-        <h2>Paramètres <span>Flex.ai</span></h2>
-        <p>Configuration de votre espace personnel</p>
-      </div>
-      
-      <div class="settings-placeholder-content" style="text-align: center; margin: 2rem 0; color: var(--text-secondary);">
-        <!-- TODO : Implémenter les véritables options de configuration utilisateur -->
-        <p>placeholder</p>
-      </div>
-      
-      <button id="btn-save-settings" class="btn btn-primary btn-block">Fermer</button>
-    </div>
-  </div>
 
   <!-- JavaScript App Logic -->
   <script src="app.js"></script>
