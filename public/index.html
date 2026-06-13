@@ -29,7 +29,7 @@
       </a>
       <nav class="landing-nav">
         <a href="#features">Fonctionnalités</a>
-        <a href="#router">Routeur</a>
+        <a href="#router">Sélection intelligente</a>
         <a href="#pricing">Tarifs</a>
       </nav>
       <div class="landing-actions">
@@ -40,27 +40,28 @@
     <!-- Section Hero -->
     <section class="hero-section">
       <div class="badge-pill-marketing">
-        <span>⚡</span> Nouveau : Optimisation intelligente de quotas
+        <span>⚡</span> Toutes vos IA dans un seul abonnement
       </div>
-      <h1>L'Agrégateur de LLM intelligent qui <span>divise vos coûts par 4</span></h1>
-      <p>Flex.ai connecte vos applications à tous les grands modèles du marché (GPT-4, Claude 3.5, Gemini) et route automatiquement vos requêtes vers le modèle le moins cher et le plus adapté.</p>
+      <h1>Une seule interface pour <span>toutes les IA</span> du marché</h1>
+      <p>Discutez avec les meilleurs modèles du marché sans multiplier les abonnements. Flex.ai sélectionne automatiquement le modèle le plus adapté à votre demande pour optimiser l'utilisation de vos crédits.</p>
       <div class="hero-buttons">
         <button id="btn-hero-start" class="btn btn-primary">Démarrer gratuitement</button>
-        <a href="#router" class="btn btn-secondary" style="text-decoration: none;">Découvrir le routeur</a>
+        <a href="#router" class="btn btn-secondary" style="text-decoration: none;">Voir comment ça marche</a>
       </div>
     </section>
 
     <!-- Section Routeur Graphique/Illustration -->
     <section id="router" class="routing-section">
-      <h2 class="section-title">Comment fonctionne le <span>Routage Actif</span> ?</h2>
-      <p class="section-subtitle">Notre routeur analyse la complexité de chaque prompt pour choisir le modèle optimal en temps réel.</p>
+      <h2 class="section-title">Comment fonctionne la <span>sélection intelligente</span> ?</h2>
+      <p class="section-subtitle">Notre système analyse votre demande et choisit le meilleur modèle en temps réel pour
+        préserver vos crédits.</p>
 
       <div class="router-infographic">
         <div class="diagram-flow">
           <!-- Carte Prompt -->
           <div class="diagram-card prompt-box">
-            <div class="prompt-title">Prompt Utilisateur</div>
-            <p>"Rédige un e-mail de relance poli pour un client qui n'a pas répondu..."</p>
+            <div class="prompt-title">Votre demande</div>
+            <p>"Corrige les fautes d'orthographe de cette liste de courses..."</p>
           </div>
 
           <!-- Connecteur -->
@@ -68,9 +69,9 @@
 
           <!-- Routeur central -->
           <div class="diagram-card router-box">
-            <span class="router-badge">Analyse d'intention</span>
-            <h4>Flex.ai Router</h4>
-            <p>Complexité : <strong>Faible</strong></p>
+            <span class="router-badge">Analyse de la tâche</span>
+            <h4>Flex.ai</h4>
+            <p>Difficulté : <strong>Très faible</strong></p>
           </div>
 
           <!-- Connecteur -->
@@ -79,16 +80,16 @@
           <!-- Modèles de destination -->
           <div class="models-list">
             <div class="model-dest routed-inactive">
-              <span>GPT-4o (Complexe)</span>
-              <span class="cost-saving" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">0.015$ / msg</span>
+              <span>Modèle complexe (Raisonnement)</span>
+              <span class="cost-saving" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Consommation élevée</span>
             </div>
             <div class="model-dest routed-active">
-              <span>Gemini Flash (Simple) ✓</span>
-              <span class="cost-saving">0.0001$ / msg</span>
+              <span>Modèle rapide (Tâches simples) ✓</span>
+              <span class="cost-saving">Consommation minimale</span>
             </div>
             <div class="model-dest routed-inactive">
-              <span>Claude 3.5 (Expert)</span>
-              <span class="cost-saving" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">0.020$ / msg</span>
+              <span>Modèle intermédiaire (Rédaction)</span>
+              <span class="cost-saving" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Consommation modérée</span>
             </div>
           </div>
         </div>
@@ -97,15 +98,15 @@
         <div class="routing-metrics-banner">
           <div class="metric-stat-item">
             <div class="stat-num">-75%</div>
-            <div class="stat-lbl">Économie de Quota</div>
+            <div class="stat-lbl">Crédits préservés</div>
           </div>
           <div class="metric-stat-item">
-            <div class="stat-num">&lt; 15ms</div>
-            <div class="stat-lbl">Surcoût de Latence</div>
+            <div class="stat-num">&lt; 0.1s</div>
+            <div class="stat-lbl">Temps de réponse</div>
           </div>
           <div class="metric-stat-item">
-            <div class="stat-num">99.9%</div>
-            <div class="stat-lbl">Fiabilité du Routage</div>
+            <div class="stat-num">100%</div>
+            <div class="stat-lbl">IA adaptée à votre demande</div>
           </div>
         </div>
       </div>
@@ -113,29 +114,32 @@
 
     <!-- Section Fonctionnalités -->
     <section id="features" class="features-section">
-      <h2 class="section-title" style="text-align: center; margin-bottom: 3rem;">Pourquoi choisir <span>Flex.ai</span> ?</h2>
+      <h2 class="section-title" style="text-align: center; margin-bottom: 3rem;">Pourquoi choisir <span>Flex.ai</span> ?
+      </h2>
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">🛡️</div>
-          <h3>Optimisation de Quota</h3>
-          <p>Évitez de saturer vos abonnements coûteux. Vos requêtes simples sont déléguées à des modèles légers et économiques.</p>
+          <h3>Économie de crédits</h3>
+          <p>Vos questions simples utilisent des modèles légers et optimisés. Vos crédits sont ainsi préservés pour vos tâches les plus exigeantes.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔌</div>
-          <h3>API Unique</h3>
-          <p>Un seul point d'intégration pour plus de 20 modèles d'intelligence artificielle. Plus besoin de maintenir plusieurs SDKs.</p>
+          <h3>Interface Unique</h3>
+          <p>Accédez aux principaux modèles du marché au même endroit. Plus besoin de jongler entre différents abonnements ou de multiplier les forfaits payants.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📊</div>
-          <h3>Rapports détaillés</h3>
-          <p>Visualisez en temps réel l'utilisation de vos jetons, vos économies réalisées et le taux de succès de chaque modèle.</p>
+          <h3>Suivi Transparent</h3>
+          <p>Visualisez en un coup d'œil les crédits économisés et le modèle d'IA sélectionné pour chacune de vos
+            réponses.</p>
         </div>
       </div>
     </section>
 
     <!-- Section Tarification -->
     <section id="pricing" class="pricing-section">
-      <h2 class="section-title" style="text-align: center; margin-bottom: 3rem;">Des tarifs <span>transparents et adaptés</span></h2>
+      <h2 class="section-title" style="text-align: center; margin-bottom: 3rem;">Des tarifs <span>simples et sans
+          engagement</span></h2>
       <div class="pricing-grid">
         <!-- Tier 1 -->
         <div class="pricing-card">
@@ -144,10 +148,10 @@
             <div class="price">0€<span>/ mois</span></div>
           </div>
           <ul class="pricing-features">
-            <li>Accès aux modèles standards</li>
-            <li>Routage de base (Llama, Gemini)</li>
-            <li>500 requêtes / mois</li>
-            <li>Support communautaire</li>
+            <li>Accès aux modèles rapides</li>
+            <li>Sélection intelligente standard</li>
+            <li>Crédits de test inclus</li>
+            <li>Idéal pour essayer la plateforme</li>
           </ul>
           <button class="btn btn-secondary btn-block btn-pricing-select">Commencer</button>
         </div>
@@ -155,13 +159,13 @@
         <div class="pricing-card premium-tier">
           <div class="pricing-header">
             <h3>Pro</h3>
-            <div class="price">29€<span>/ mois</span></div>
+            <div class="price">12€<span>/ mois</span></div>
           </div>
           <ul class="pricing-features">
-            <li>Accès à tous les modèles (GPT-4, Claude)</li>
-            <li>Routage intelligent avancé</li>
-            <li>50 000 requêtes / mois</li>
-            <li>Statistiques en temps réel</li>
+            <li>Accès à l'ensemble des modèles d'IA</li>
+            <li>Sélection intelligente avancée</li>
+            <li>Crédits mensuels généreux</li>
+            <li>Priorité d'accès aux nouveaux modèles</li>
             <li>Support prioritaire</li>
           </ul>
           <button class="btn btn-primary btn-block btn-pricing-select">S'abonner</button>
@@ -169,17 +173,17 @@
         <!-- Tier 3 -->
         <div class="pricing-card">
           <div class="pricing-header">
-            <h3>Entreprise</h3>
-            <div class="price">Sur mesure</div>
+            <h3>Famille</h3>
+            <div class="price">19€<span>/ mois</span></div>
           </div>
           <ul class="pricing-features">
-            <li>Volume de requêtes illimité</li>
-            <li>Routage personnalisé / fine-tuné</li>
-            <li>SLA de disponibilité 99.9%</li>
-            <li>Hébergement dédié possible</li>
-            <li>Account Manager dédié</li>
+            <li>Plusieurs profils membres inclus</li>
+            <li>Tous les avantages du forfait Pro</li>
+            <li>Génération d'images incluse</li>
+            <li>Espace partagé pour les membres</li>
+            <li>Support ultra-prioritaire</li>
           </ul>
-          <button class="btn btn-secondary btn-block btn-pricing-select">Contacter l'équipe</button>
+          <button class="btn btn-secondary btn-block btn-pricing-select">Choisir l'offre Famille</button>
         </div>
       </div>
     </section>
@@ -192,7 +196,7 @@
       <div class="auth-header">
         <div class="logo-icon">⚡</div>
         <h2>Flex.ai <span>Auth</span></h2>
-        <p>Système d'authentification</p>
+        <p>Système de connexion</p>
       </div>
 
       <!-- Message d'erreur/notification -->
@@ -233,16 +237,55 @@
     </div>
   </div>
 
+  <!-- MENU LATÉRAL (SIDEBAR) POUR HISTORIQUE ET PARAMÈTRES -->
+  <div id="sidebar-menu" class="sidebar-menu hide-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon" style="font-size: 1.4rem; animation: none;">⚡</div>
+        <span>Flex.ai</span>
+      </div>
+      <button id="btn-sidebar-close" class="btn-sidebar-close" title="Fermer le menu">&times;</button>
+    </div>
+    
+    <div class="sidebar-body">
+      <button id="btn-new-chat" class="btn btn-primary btn-block">
+        <span>+</span> Nouvelle conversation
+      </button>
+      
+      <div class="sidebar-section">
+        <h4 class="sidebar-section-title">Historique des conversations</h4>
+        <div class="history-list">
+          <!-- TODO : lier avec l'historique réel en SurrealDB -->
+          <div class="history-item placeholder-item">
+            <span class="history-icon">💬</span>
+            <span class="history-text">placeholder</span>
+          </div>
+          <div class="history-item placeholder-item">
+            <span class="history-icon">💬</span>
+            <span class="history-text">placeholder</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="sidebar-footer">
+      <button id="btn-open-settings" class="btn btn-secondary btn-block">
+        ⚙️ Paramètres
+      </button>
+    </div>
+  </div>
+
   <!-- ÉCRAN DASHBOARD (Masqué si déconnecté) -->
   <div id="dashboard-screen" class="container hide">
 
     <!-- Header -->
     <header class="app-header">
       <div class="header-logo">
+        <button id="btn-sidebar-toggle" class="btn-sidebar-toggle" title="Ouvrir le menu">☰</button>
         <div class="logo-icon">⚡</div>
         <div class="logo-text">
-          <h1>Flex.ai <span>Engine</span></h1>
-          <p>Base de données active : <span class="accent-text">SurrealDB</span></p>
+          <h1>Flex.ai <span>Espace Membre</span></h1>
+          <p id="header-subtitle">Votre espace personnel intelligent</p>
         </div>
       </div>
 
@@ -261,67 +304,7 @@
     <!-- Main Content Layout -->
     <main class="grid-layout">
 
-      <!-- SECTION COMMUNE : Statut & Métriques Épurées -->
-      <section class="panel panel-metrics span-12">
-        <div class="panel-header">
-          <h2>📊 Métriques du Système &amp; SurrealDB</h2>
-          <div class="uptime-badge">
-            Uptime : <span id="uptime-value" class="font-mono">00:00:00</span>
-          </div>
-        </div>
-
-        <div class="panel-body metrics-summary-grid">
-          <!-- CPU Metric -->
-          <div class="mini-metric-card">
-            <div class="metric-info">
-              <span>Charge CPU</span>
-              <h3 id="cpu-value">0%</h3>
-            </div>
-            <div class="metric-visual">
-              <svg class="progress-ring" width="60" height="60">
-                <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="4"
-                  fill="transparent" r="24" cx="30" cy="30" />
-                <circle id="cpu-circle" class="progress-ring__circle" stroke="var(--secondary)" stroke-width="4"
-                  fill="transparent" r="24" cx="30" cy="30" />
-              </svg>
-            </div>
-          </div>
-
-          <!-- Memory Metric -->
-          <div class="mini-metric-card">
-            <div class="metric-info">
-              <span>RAM Système</span>
-              <h3 id="ram-percentage">0%</h3>
-              <span class="subtext" id="ram-details">0MB / 0MB</span>
-            </div>
-            <div class="metric-visual bar-visual">
-              <div class="progress-bar-container">
-                <div id="ram-progress" class="progress-bar" style="width: 0%"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Requests Metric -->
-          <div class="mini-metric-card">
-            <div class="metric-info">
-              <span>Requêtes API</span>
-              <h3 id="request-count">0</h3>
-              <span class="subtext">Compteur global</span>
-            </div>
-            <div class="metric-visual icon-visual">⚡</div>
-          </div>
-
-          <!-- DB Connection Status -->
-          <div class="mini-metric-card">
-            <div class="metric-info">
-              <span>Statut Base de Données</span>
-              <h3 class="status-online-text" id="db-status-text">CONNECTÉ</h3>
-              <span class="subtext">surreal-ns: test</span>
-            </div>
-            <div class="metric-visual icon-visual db-icon">📁</div>
-          </div>
-        </div>
-      </section>
+      <!-- SECTION COMMUNE : Statut & Métriques Épurées (SUPPRIMÉE DANS LA VUE UTILISATEUR ET ADMIN COMMUNE POUR NETTOYAGE) -->
 
       <!-- SECTION DYNAMIQUE : Selon le Rôle de l'utilisateur -->
 
@@ -408,30 +391,27 @@
         </section>
       </div>
 
-      <!-- CONTENU UTILISATEUR STANDARD (Visible uniquement si utilisateur standard - Écran W.I.P.) -->
+      <!-- CONTENU UTILISATEUR STANDARD (Interface Chatbot Épurée) -->
       <div id="user-panel" class="user-only-wrapper span-12">
-        <div class="wip-panel-container">
-          <div class="wip-icon">🚧</div>
-          <div class="wip-badge">DASHBOARD UTILISATEUR</div>
-          <h2>Espace en <span>cours de développement</span></h2>
-          <p>Ravi de vous compter parmi nos premiers membres, <strong><span id="wip-user-name">Utilisateur</span></strong> ! Notre équipe finalise l'interface utilisateur standard. Vous aurez très bientôt accès à votre historique de routage, vos statistiques de quotas et votre facturation unique.</p>
-          
-          <div class="wip-list" style="margin-bottom: 2rem;">
-            <div class="wip-item">
-              <span class="wip-indicator"></span>
-              <span>Accès sécurisé à l'API via SurrealDB : <strong style="color: var(--success);">Actif</strong></span>
-            </div>
-            <div class="wip-item">
-              <span class="wip-indicator"></span>
-              <span>Intégration du routeur de modèles : <strong>En test final</strong></span>
-            </div>
-            <div class="wip-item">
-              <span class="wip-indicator"></span>
-              <span>Suivi analytique en temps réel : <strong>En développement</strong></span>
-            </div>
+        <div id="chat-container" class="chat-container">
+          <!-- Écran d'accueil du Chat (Centré au départ) -->
+          <div id="chat-welcome" class="chat-welcome">
+            <h2 id="chat-greeting" class="chat-greeting">Bonjour, <span id="chat-user-name">Utilisateur</span></h2>
+            <p class="chat-subtitle">Comment puis-je vous aider aujourd'hui ?</p>
           </div>
 
-          <button id="btn-wip-logout" class="btn btn-secondary">Se déconnecter de la session</button>
+          <!-- Zone d'affichage des messages (Masquée au départ) -->
+          <div id="chat-messages" class="chat-messages hide">
+            <!-- Les messages s'afficheront ici dynamiquement -->
+          </div>
+
+          <!-- Formulaire de saisie du Chat (S'anime vers le bas) -->
+          <div id="chat-input-area" class="chat-input-area">
+            <form id="chat-form" class="chat-form">
+              <input type="text" id="chat-input" placeholder="Posez votre question à Flex.ai..." required autocomplete="off">
+              <button type="submit" id="btn-chat-send" class="btn-chat-send" title="Envoyer">➔</button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -442,6 +422,25 @@
       <p>Flex ai Engine &bull; Alimenté par SurrealDB &bull; Vanilla CSS</p>
       <div id="system-specs" class="system-specs">Détection du système en cours...</div>
     </footer>
+  </div>
+
+  <!-- MODALE PARAMÈTRES (PLACEHOLDER) -->
+  <div id="settings-modal" class="auth-container hide">
+    <div class="auth-card">
+      <button id="btn-close-settings" class="close-modal-btn" title="Fermer">&times;</button>
+      <div class="auth-header">
+        <div class="logo-icon">⚙️</div>
+        <h2>Paramètres <span>Flex.ai</span></h2>
+        <p>Configuration de votre espace personnel</p>
+      </div>
+      
+      <div class="settings-placeholder-content" style="text-align: center; margin: 2rem 0; color: var(--text-secondary);">
+        <!-- TODO : Implémenter les véritables options de configuration utilisateur -->
+        <p>placeholder</p>
+      </div>
+      
+      <button id="btn-save-settings" class="btn btn-primary btn-block">Fermer</button>
+    </div>
   </div>
 
   <!-- JavaScript App Logic -->

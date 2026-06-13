@@ -82,15 +82,29 @@ const presetButtons = document.querySelectorAll('.btn-preset');
 const logsConsole = document.getElementById('logs-console');
 const logFilterButtons = document.querySelectorAll('.filter-btn');
 
-// Éléments Standard User
-const welcomeUserName = document.getElementById('wip-user-name');
+// Éléments Standard User (Chatbot & Sidebar)
+const sidebarMenu = document.getElementById('sidebar-menu');
+const btnSidebarToggle = document.getElementById('btn-sidebar-toggle');
+const btnSidebarClose = document.getElementById('btn-sidebar-close');
+const btnNewChat = document.getElementById('btn-new-chat');
+const btnOpenSettings = document.getElementById('btn-open-settings');
+const btnCloseSettings = document.getElementById('btn-close-settings');
+const btnSaveSettings = document.getElementById('btn-save-settings');
+const settingsModal = document.getElementById('settings-modal');
+
+const chatContainer = document.getElementById('chat-container');
+const chatWelcome = document.getElementById('chat-welcome');
+const chatUserName = document.getElementById('chat-user-name');
+const chatGreeting = document.getElementById('chat-greeting');
+const chatMessages = document.getElementById('chat-messages');
+const chatForm = document.getElementById('chat-form');
+const chatInput = document.getElementById('chat-input');
 const userLatencyVal = document.getElementById('user-latency-val');
 
 // Landing Page et Modale
 const btnOpenLogin = document.getElementById('btn-open-login');
 const btnCloseAuth = document.getElementById('btn-close-auth');
 const btnHeroStart = document.getElementById('btn-hero-start');
-const btnWipLogout = document.getElementById('btn-wip-logout');
 
 // --- INITIALISATION DU GRAPH CPU (Cercle SVG) ---
 let circumference = 0;
@@ -219,20 +233,68 @@ function showDashboardView() {
   userRoleBadge.className = `user-role-badge ${currentUser.role}`;
   avatarChar.textContent = currentUser.name.charAt(0);
 
+  // Personnaliser le header selon le rôle (B2C pour utilisateur standard, technique pour admin)
+  const headerLogoBadge = document.querySelector('.header-logo h1 span');
+  const headerSubtitle = document.getElementById('header-subtitle');
+
   // Basculer l'affichage selon le rôle
   if (currentUser.role === 'admin') {
+    if (headerLogoBadge) headerLogoBadge.textContent = 'Engine';
+    if (headerSubtitle) headerSubtitle.innerHTML = 'Base de données active : <span class="accent-text">SurrealDB</span>';
     adminPanel.classList.remove('hide');
     userPanel.classList.add('hide');
+    
+    // Masquer le bouton de la sidebar pour l'admin
+    if (btnSidebarToggle) btnSidebarToggle.classList.add('hide');
+    if (sidebarMenu) sidebarMenu.classList.add('hide-sidebar');
+    
     loadAdminData();
     startAdminIntervals();
   } else {
+    if (headerLogoBadge) headerLogoBadge.textContent = 'Espace Membre';
+    if (headerSubtitle) headerSubtitle.textContent = 'Votre espace personnel intelligent';
     adminPanel.classList.add('hide');
     userPanel.classList.remove('hide');
-    if (welcomeUserName) {
-      welcomeUserName.textContent = currentUser.name;
+    
+    // Afficher le bouton de la sidebar uniquement pour les utilisateurs normaux
+    if (btnSidebarToggle) btnSidebarToggle.classList.remove('hide');
+    
+    // Déterminer le message de bienvenue selon l'heure
+    if (chatGreeting) {
+      const hour = new Date().getHours();
+      let greetingWord = 'Bonjour';
+      if (hour >= 18) {
+        greetingWord = 'Bonsoir';
+      } else if (hour >= 12 && hour < 18) {
+        greetingWord = 'Bon après-midi';
+      }
+      chatGreeting.innerHTML = `${greetingWord}, <span id="chat-user-name">${escapeHTML(currentUser.name)}</span>`;
     }
-    // Charger une seule fois le statut pour les specs système
+    
+    // Réinitialiser l'interface de chat
+    resetChatInterface();
+    
+    // Charger une seule fois le statut pour les specs système (sécurisé)
     fetchStatus();
+  }
+}
+
+function resetChatInterface() {
+  if (chatMessages) {
+    chatMessages.innerHTML = '';
+    chatMessages.classList.add('hide');
+  }
+  if (chatWelcome) {
+    chatWelcome.classList.remove('hide');
+  }
+  if (chatContainer) {
+    chatContainer.classList.remove('has-messages');
+  }
+  if (chatInput) {
+    chatInput.value = '';
+  }
+  if (sidebarMenu) {
+    sidebarMenu.classList.add('hide-sidebar');
   }
 }
 
@@ -340,21 +402,23 @@ async function fetchStatus() {
     const data = await res.json();
 
     // Mettre à jour l'Uptime
-    uptimeValue.textContent = formatUptime(data.uptime);
+    if (uptimeValue) uptimeValue.textContent = formatUptime(data.uptime);
 
     // Mettre à jour le CPU
-    setCpuProgress(data.simulatedCpu);
+    if (cpuCircle && cpuValue) setCpuProgress(data.simulatedCpu);
 
     // Mettre à jour la RAM
-    const totalMem = data.system.memory.total;
-    const usedMem = data.system.memory.used;
-    const usedPercent = Math.round((usedMem / totalMem) * 100);
-    ramPercentage.textContent = `${usedPercent}%`;
-    ramDetails.textContent = `${formatBytes(usedMem, 1)} / ${formatBytes(totalMem, 1)}`;
-    ramProgress.style.width = `${usedPercent}%`;
+    if (ramPercentage && ramDetails && ramProgress) {
+      const totalMem = data.system.memory.total;
+      const usedMem = data.system.memory.used;
+      const usedPercent = Math.round((usedMem / totalMem) * 100);
+      ramPercentage.textContent = `${usedPercent}%`;
+      ramDetails.textContent = `${formatBytes(usedMem, 1)} / ${formatBytes(totalMem, 1)}`;
+      ramProgress.style.width = `${usedPercent}%`;
+    }
 
     // Requêtes
-    requestCount.textContent = data.requestCount;
+    if (requestCount) requestCount.textContent = data.requestCount;
 
     // Latence utilisateur
     if (userLatencyVal) {
@@ -362,19 +426,23 @@ async function fetchStatus() {
     }
 
     // Charger les specs système une seule fois
-    if (!systemSpecsLoaded) {
+    if (!systemSpecsLoaded && systemSpecs) {
       const sys = data.system;
       systemSpecs.textContent = `OS: ${sys.platform} (${sys.arch}) | CPU: ${sys.cpuCount} Cores`;
       systemSpecsLoaded = true;
     }
 
-    dbStatusText.textContent = 'EN LIGNE';
-    dbStatusText.className = 'status-online-text';
+    if (dbStatusText) {
+      dbStatusText.textContent = 'EN LIGNE';
+      dbStatusText.className = 'status-online-text';
+    }
 
   } catch (err) {
     console.error('Erreur fetchStatus:', err);
-    dbStatusText.textContent = 'HORS LIGNE';
-    dbStatusText.className = 'text-red';
+    if (dbStatusText) {
+      dbStatusText.textContent = 'HORS LIGNE';
+      dbStatusText.className = 'text-red';
+    }
   }
 }
 
@@ -578,21 +646,92 @@ document.querySelectorAll('.btn-pricing-select').forEach(btn => {
   });
 });
 
-// Bouton de déconnexion spécifique à l'écran W.I.P.
-if (btnWipLogout) {
-  btnWipLogout.addEventListener('click', async () => {
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: getHeaders()
-      });
-    } catch (err) {
-      console.error('Erreur lors du logout:', err);
-    } finally {
-      localStorage.removeItem('token');
-      showAuthView();
+// --- ÉVÉNEMENTS CHATBOT ET SIDEBAR ---
+
+// Toggle de la Sidebar
+if (btnSidebarToggle) {
+  btnSidebarToggle.addEventListener('click', () => {
+    if (sidebarMenu) sidebarMenu.classList.toggle('hide-sidebar');
+  });
+}
+
+if (btnSidebarClose) {
+  btnSidebarClose.addEventListener('click', () => {
+    if (sidebarMenu) sidebarMenu.classList.add('hide-sidebar');
+  });
+}
+
+// Nouvelle conversation
+if (btnNewChat) {
+  btnNewChat.addEventListener('click', () => {
+    resetChatInterface();
+  });
+}
+
+// Modale des paramètres (placeholders)
+if (btnOpenSettings) {
+  btnOpenSettings.addEventListener('click', () => {
+    if (settingsModal) settingsModal.classList.remove('hide');
+  });
+}
+
+if (btnCloseSettings) {
+  btnCloseSettings.addEventListener('click', () => {
+    if (settingsModal) settingsModal.classList.add('hide');
+  });
+}
+
+if (btnSaveSettings) {
+  btnSaveSettings.addEventListener('click', () => {
+    if (settingsModal) settingsModal.classList.add('hide');
+  });
+}
+
+if (settingsModal) {
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+      settingsModal.classList.add('hide');
     }
   });
+}
+
+// TODO : lier le chat avec SurrealDB pour enregistrer et charger l'historique des conversations
+// Soumission du formulaire de chat
+if (chatForm) {
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const messageText = chatInput.value.trim();
+    if (!messageText) return;
+    
+    // Si premier message, transitionner l'interface
+    if (chatMessages && chatMessages.classList.contains('hide')) {
+      if (chatWelcome) chatWelcome.classList.add('hide');
+      chatMessages.classList.remove('hide');
+      if (chatContainer) chatContainer.classList.add('has-messages');
+    }
+    
+    // Message de l'utilisateur
+    appendChatMessage('Vous', messageText, 'user');
+    chatInput.value = '';
+    
+    // TODO : remplacer la réponse placeholder par l'appel API à l'IA avec SurrealDB
+    // Simulation d'une réponse de bot après un court délai
+    setTimeout(() => {
+      appendChatMessage('Flex.ai', 'Ceci est une réponse de démonstration (placeholder).', 'bot');
+    }, 800);
+  });
+}
+
+function appendChatMessage(sender, text, type) {
+  if (!chatMessages) return;
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${type}`;
+  messageDiv.innerHTML = `
+    <span class="chat-message-sender">${escapeHTML(sender)}</span>
+    <p>${escapeHTML(text)}</p>
+  `;
+  chatMessages.appendChild(messageDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 // --- Lancement au chargement de la page ---
