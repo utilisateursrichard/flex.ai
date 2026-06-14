@@ -11,6 +11,14 @@
   "author": "utilisateur_richard",
   "license": "AGPL-3.0-only",
   "dependencies": {
-    "express": "^4.21.2"
+    "@google/genai": "^2.8.0",
+    "@google/generative-ai": "^0.24.1",
+    "@huggingface/inference": "^4.13.18",
+    "argon2": "^0.44.0",
+    "axios": "^1.17.0",
+    "discord.js": "^14.26.4",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "groq-sdk": "^1.2.1"
   }
 }

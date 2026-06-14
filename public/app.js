@@ -40,6 +40,7 @@ const loginPasswordInput = document.getElementById('login-password');
 const registerNameInput = document.getElementById('register-name');
 const registerUsernameInput = document.getElementById('register-username');
 const registerPasswordInput = document.getElementById('register-password');
+const registerDemoMode = document.getElementById('register-demo-mode');
 
 // Landing Page et Modale
 const btnOpenLogin = document.getElementById('btn-open-login');
@@ -114,12 +115,13 @@ if (registerForm) {
     const name = registerNameInput.value;
     const username = registerUsernameInput.value;
     const password = registerPasswordInput.value;
+    const demo = registerDemoMode ? registerDemoMode.checked : false;
 
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, username, password })
+        body: JSON.stringify({ name, username, password, demo })
       });
       const data = await res.json();
 
@@ -127,6 +129,7 @@ if (registerForm) {
         registerNameInput.value = '';
         registerUsernameInput.value = '';
         registerPasswordInput.value = '';
+        if (registerDemoMode) registerDemoMode.checked = false;
         registerForm.classList.add('hide');
         loginForm.classList.remove('hide');
         window.location.href = '/chat';

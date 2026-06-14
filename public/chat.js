@@ -694,6 +694,8 @@ if (btnNewChat) {
   });
 }
 
+// --- GESTION DE LA MODALE PARAMÈTRES ---
+
 // Modale des paramètres (placeholders)
 if (btnOpenSettings) {
   btnOpenSettings.addEventListener('click', () => {
@@ -721,13 +723,38 @@ if (settingsModal) {
   });
 }
 
+function getChatHistory() {
+  const history = [];
+  if (!chatMessages) return history;
+  
+  const messageDivs = chatMessages.querySelectorAll('.chat-message');
+  messageDivs.forEach(div => {
+    if (div.classList.contains('loading-msg')) return;
+    
+    const isUser = div.classList.contains('user');
+    const role = isUser ? 'user' : 'assistant';
+    
+    const pElement = div.querySelector('p');
+    if (pElement) {
+      history.push({
+        role: role,
+        content: pElement.textContent.trim()
+      });
+    }
+  });
+  return history;
+}
+
 // TODO : lier le chat avec SurrealDB pour enregistrer et charger l'historique des conversations
 // Soumission du formulaire de chat
 if (chatForm) {
-  chatForm.addEventListener('submit', (e) => {
+  chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const messageText = chatInput.value.trim();
     if (!messageText) return;
+
+    // Collecter l'historique avant d'ajouter le message en cours
+    const history = getChatHistory();
 
     // Si premier message, transitionner l'interface
     if (chatMessages && chatMessages.classList.contains('hide')) {
@@ -740,20 +767,80 @@ if (chatForm) {
     appendChatMessage('Vous', messageText, 'user');
     chatInput.value = '';
 
-    // TODO : remplacer la réponse placeholder par l'appel API à l'IA avec SurrealDB
-    // Simulation d'une réponse de bot après un court délai
-    setTimeout(() => {
-      appendChatMessage('Flex.ai', 'Ceci est une réponse de démonstration (placeholder).', 'bot');
-    }, 800);
+    // Afficher le chargement
+    const loadingId = appendLoadingMessage('Flex.ai');
+
+    try {
+      const res = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          message: messageText,
+          history
+        })
+      });
+
+      removeLoadingMessage(loadingId);
+
+      if (res.ok) {
+        const data = await res.json();
+        appendChatMessage('Flex.ai', data.reply, 'bot', data.thoughts);
+      } else {
+        const errData = await res.json();
+        appendChatMessage('Flex.ai', `Erreur : ${errData.message || 'Impossible de communiquer avec le serveur.'}`, 'bot');
+      }
+    } catch (err) {
+      removeLoadingMessage(loadingId);
+      console.error(err);
+      appendChatMessage('Flex.ai', "Erreur de connexion avec le serveur d'IA.", 'bot');
+    }
   });
 }
 
-function appendChatMessage(sender, text, type) {
+function appendLoadingMessage(sender) {
+  if (!chatMessages) return null;
+  const loadingId = 'loading-' + Date.now();
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message bot loading-msg`;
+  messageDiv.id = loadingId;
+  messageDiv.innerHTML = `
+    <span class="chat-message-sender">${escapeHTML(sender)}</span>
+    <p class="writing-indicator" style="font-style: italic; color: var(--text-muted);">
+      Réflexion en cours...
+    </p>
+  `;
+  chatMessages.appendChild(messageDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return loadingId;
+}
+
+function removeLoadingMessage(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function appendChatMessage(sender, text, type, thoughts = '') {
   if (!chatMessages) return;
   const messageDiv = document.createElement('div');
   messageDiv.className = `chat-message ${type}`;
+  
+  let thoughtsHtml = '';
+  if (thoughts) {
+    thoughtsHtml = `
+      <div class="thoughts-wrapper" style="margin-bottom: 0.75rem;">
+        <details class="thoughts-details" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem;">
+          <summary style="font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--primary); display: flex; align-items: center; gap: 0.25rem; outline: none; user-select: none;">
+            <span>💭 Voir le raisonnement</span>
+          </summary>
+          <pre class="thoughts-content" style="font-family: var(--font-mono); font-size: 0.8rem; white-space: pre-wrap; margin-top: 0.5rem; color: var(--text-muted); border-left: 2px solid var(--primary); padding-left: 0.5rem; max-height: 200px; overflow-y: auto; text-align: left; background: transparent; padding: 0.25rem 0.5rem; border-top: none; border-right: none; border-bottom: none;">${escapeHTML(thoughts)}</pre>
+        </details>
+      </div>
+    `;
+  }
+
   messageDiv.innerHTML = `
     <span class="chat-message-sender">${escapeHTML(sender)}</span>
+    ${thoughtsHtml}
     <p>${escapeHTML(text)}</p>
   `;
   chatMessages.appendChild(messageDiv);

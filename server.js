@@ -1,8 +1,10 @@
+try { process.loadEnvFile(); } catch (e) {}
 const express = require('express');
 const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
 const crypto = require('crypto');
+const argon2 = require('argon2');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -125,9 +127,41 @@ async function querySurreal(sql, ns = 'test', db = 'test') {
   }
 }
 
-// Fonction de hachage SHA-256 pour les mots de passe
-function hashPassword(password) {
+// Fonction de hachage SHA-256 héritée pour les mots de passe
+function hashPasswordSHA256(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Fonction de hachage moderne Argon2id avec sel/pepper issu du fichier .env
+async function hashPasswordArgon2(password) {
+  const pepper = process.env.SALT || '';
+  return await argon2.hash(password + pepper);
+}
+
+// Fonction de vérification de mot de passe avec compatibilité descendante et mise à jour automatique
+async function verifyPassword(user, password) {
+  const storedHash = user.password;
+  const pepper = process.env.SALT || '';
+  
+  if (storedHash && storedHash.startsWith('$argon2id$')) {
+    // Hash moderne Argon2id
+    return await argon2.verify(storedHash, password + pepper);
+  } else {
+    // Hash hérité SHA-256
+    const legacyHash = hashPasswordSHA256(password);
+    if (storedHash === legacyHash) {
+      // Authentification correcte ! On met à niveau vers Argon2id de façon asynchrone
+      try {
+        const newHash = await hashPasswordArgon2(password);
+        await querySurreal(`UPDATE ${user.id} SET password = '${newHash}';`);
+        addLog('info', `Mot de passe de l'utilisateur ${user.username} mis à niveau vers Argon2id`, 'security');
+      } catch (err) {
+        addLog('error', `Échec de la mise à niveau vers Argon2id pour ${user.username} : ${err.message}`, 'security');
+      }
+      return true;
+    }
+    return false;
+  }
 }
 
 // Initialisation de la base de données SurrealDB
@@ -171,9 +205,9 @@ async function initSurreal() {
         }
       }
       if (createAdmin) {
-        const passHash = hashPassword('admin');
+        const passHash = await hashPasswordArgon2('admin');
         await querySurreal(`CREATE user:admin SET username = 'admin', password = '${passHash}', name = 'Administrateur', role = 'admin', createdAt = time::now();`);
-        addLog('info', 'Compte administrateur initialisé avec succès (admin:admin)', 'security');
+        addLog('info', 'Compte administrateur initialisé avec succès (admin:admin) avec Argon2id', 'security');
       }
 
       addLog('info', 'Connexion et initialisation de SurrealDB réussies', 'system');
@@ -193,21 +227,23 @@ async function initSurreal() {
 // Lancer l'initialisation de SurrealDB
 initSurreal();
 
-// Session store en mémoire (token -> user data)
-const sessions = new Map();
-
 // Middleware d'authentification
-function authenticate(req, res, next) {
+async function authenticate(req, res, next) {
   const token = getCookie(req, 'token');
   if (!token) {
     return res.status(401).json({ error: 'Non autorisé', message: 'Token manquant ou invalide.' });
   }
-  const session = sessions.get(token);
-  if (!session) {
+  try {
+    const sessionRes = await querySurreal(`SELECT user.username AS username, user.name AS name, user.role AS role, user.demo AS demo FROM session:${token};`);
+    if (!sessionRes[0] || sessionRes[0].status === 'ERR' || !sessionRes[0].result || sessionRes[0].result.length === 0) {
+      return res.status(401).json({ error: 'Non autorisé', message: 'Session expirée ou invalide.' });
+    }
+    req.user = sessionRes[0].result[0];
+    next();
+  } catch (err) {
+    console.error('Erreur d\'authentification base de données :', err);
     return res.status(401).json({ error: 'Non autorisé', message: 'Session expirée ou invalide.' });
   }
-  req.user = session;
-  next();
 }
 
 // Middleware pour vérifier le rôle admin
@@ -279,13 +315,23 @@ function getCookie(req, name) {
 }
 
 // Route sécurisée pour /chat (inaccessible si non connecté)
-app.get('/chat', (req, res) => {
+app.get('/chat', async (req, res) => {
   const token = getCookie(req, 'token');
-  if (!token || !sessions.has(token)) {
-    addLog('warn', `Accès refusé à /chat pour un utilisateur non authentifié`, 'security');
+  if (!token) {
+    addLog('warn', `Accès refusé à /chat (token cookie absent)`, 'security');
     return res.redirect('/?error=unauthorized');
   }
-  res.sendFile(path.join(__dirname, 'private', 'chat.html'));
+  try {
+    const sessionRes = await querySurreal(`SELECT user.username AS username, user.name AS name, user.role AS role FROM session:${token};`);
+    if (!sessionRes[0] || sessionRes[0].status === 'ERR' || !sessionRes[0].result || sessionRes[0].result.length === 0) {
+      addLog('warn', `Accès refusé à /chat (session invalide ou expirée)`, 'security');
+      return res.redirect('/?error=unauthorized');
+    }
+    res.sendFile(path.join(__dirname, 'private', 'chat.html'));
+  } catch (err) {
+    addLog('error', `Erreur lors de la vérification de session pour /chat : ${err.message}`, 'security');
+    return res.redirect('/?error=unauthorized');
+  }
 });
 
 // Redirection de /chat.html vers /chat pour éviter l'erreur "Cannot GET /chat.html"
@@ -301,7 +347,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 1. Inscription (Register)
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { username, password, name } = req.body;
+    const { username, password, name, demo } = req.body;
     if (!username || !password || !name) {
       return res.status(400).json({ error: 'Champs manquants', message: 'Veuillez remplir tous les champs.' });
     }
@@ -314,20 +360,26 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Existe déjà', message: 'Cet identifiant est déjà utilisé.' });
     }
 
-    const passHash = hashPassword(password);
+    const passHash = await hashPasswordArgon2(password);
     const escapedName = name.replace(/'/g, "\\'");
+    const demoVal = demo === true;
 
     // Insérer dans SurrealDB
-    const insertRes = await querySurreal(`CREATE user SET username = '${cleanUsername}', password = '${passHash}', name = '${escapedName}', role = 'user', createdAt = time::now();`);
+    const insertRes = await querySurreal(`CREATE user SET username = '${cleanUsername}', password = '${passHash}', name = '${escapedName}', role = 'user', demo = ${demoVal}, createdAt = time::now();`);
 
     if (insertRes[0] && insertRes[0].status === 'ERR') {
       throw new Error(insertRes[0].result);
     }
 
+    const createdUser = insertRes[0].result[0];
+    const userId = createdUser.id;
+
     // Générer une session
     const token = crypto.randomBytes(32).toString('hex');
-    const userData = { username: cleanUsername, name: name, role: 'user' };
-    sessions.set(token, userData);
+    const userData = { username: cleanUsername, name: name, role: 'user', demo: demoVal };
+
+    // Stocker la session dans SurrealDB
+    await querySurreal(`CREATE session:${token} SET user = ${userId}, createdAt = time::now();`);
 
     addLog('info', `Nouvel utilisateur inscrit : ${cleanUsername}`, 'security');
 
@@ -355,15 +407,17 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const cleanUsername = username.trim().toLowerCase();
-    const passHash = hashPassword(password);
 
     const searchRes = await querySurreal(`SELECT * FROM user WHERE username = '${cleanUsername}';`);
     if (searchRes[0] && searchRes[0].result && searchRes[0].result.length > 0) {
       const user = searchRes[0].result[0];
-      if (user.password === passHash) {
+      const isValid = await verifyPassword(user, password);
+      if (isValid) {
         const token = crypto.randomBytes(32).toString('hex');
         const userData = { username: user.username, name: user.name, role: user.role };
-        sessions.set(token, userData);
+
+        // Stocker la session dans SurrealDB
+        await querySurreal(`CREATE session:${token} SET user = ${user.id}, createdAt = time::now();`);
 
         addLog('info', `Utilisateur connecté : ${cleanUsername} (${user.role})`, 'security');
 
@@ -388,10 +442,14 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // 3. Déconnexion (Logout)
-app.post('/api/auth/logout', authenticate, (req, res) => {
+app.post('/api/auth/logout', authenticate, async (req, res) => {
   const token = getCookie(req, 'token');
   if (token) {
-    sessions.delete(token);
+    try {
+      await querySurreal(`DELETE session:${token};`);
+    } catch (err) {
+      console.error('Erreur suppression session database:', err);
+    }
   }
   addLog('info', `Utilisateur déconnecté : ${req.user.username}`, 'security');
   
@@ -503,6 +561,148 @@ app.get('/api/trigger-error', authenticate, requireAdmin, (req, res) => {
     message: 'Une erreur interne simulée s\'est produite sur le serveur.',
     timestamp: new Date().toISOString()
   });
+});
+
+// --- API DE CHAT POUR LE MODE DÉMO ---
+
+// 1. Liste des modèles d'IA disponibles
+app.get('/api/models', authenticate, (req, res) => {
+  try {
+    const configIA = require('./ia/config');
+    const models = configIA.MODELS.map(m => ({
+      name: m.name,
+      displayName: m.displayName,
+      provider: m.provider,
+      description: m.description
+    }));
+    res.json(models);
+  } catch (err) {
+    console.error('Erreur chargement modèles IA:', err);
+    res.status(500).json({ error: 'Impossible de charger les modèles d\'IA' });
+  }
+});
+
+// 2. Envoi de message (Demo ou Normal)
+app.post('/api/chat/send', authenticate, async (req, res) => {
+  const { message, history, modelName } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'Message requis' });
+  }
+
+  const demoActive = req.user.demo === true;
+
+  if (demoActive) {
+    try {
+      const configIA = require('./ia/config');
+      const utilsIA = require('./ia/utils');
+
+      // Choisir un modèle par défaut si aucun n'est spécifié ou disponible
+      const selectedModelName = modelName || (configIA.MODELS[0] && configIA.MODELS[0].name) || 'gemini-3-flash-preview';
+
+      // Trouver le modèle et son provider
+      const modelConfig = configIA.MODELS.find(m => m.name === selectedModelName);
+      if (!modelConfig) {
+        return res.status(400).json({ error: 'Modèle non trouvé dans la configuration' });
+      }
+
+      const provider = modelConfig.provider;
+      let replyText = '';
+      let thoughtsText = '';
+
+      if (provider === 'gemini') {
+        // Formater l'historique au format attendu par Gemini :
+        // [{ role: 'user'|'model', parts: [{ text: string }] }]
+        const geminiHistory = (history || []).map(msg => ({
+          role: msg.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: msg.content }]
+        }));
+
+        const geminiRes = await utilsIA.queryGemini(message, selectedModelName, [], false, geminiHistory);
+        if (geminiRes) {
+          replyText = typeof geminiRes === 'object' ? (geminiRes.text || '') : geminiRes;
+          thoughtsText = typeof geminiRes === 'object' ? (geminiRes.thoughts || '') : '';
+        } else {
+          throw new Error('Le modèle Gemini n\'a pas renvoyé de réponse');
+        }
+      } else {
+        // Pour Groq, SambaNova, Cerebras, GitHub Models, ils attendent un tableau de messages :
+        // [{ role: 'system'|'user'|'assistant', content: string }]
+        const messages = [
+          { role: 'system', content: 'Tu es Flex.ai, un assistant virtuel intelligent et utile.' }
+        ];
+
+        if (history && Array.isArray(history)) {
+          history.forEach(msg => {
+            messages.push({
+              role: msg.role, // 'user' ou 'assistant' (OpenAI standard)
+              content: msg.content
+            });
+          });
+        }
+
+        messages.push({
+          role: 'user',
+          content: message
+        });
+
+        if (provider === 'groq') {
+          const groqRes = await utilsIA.queryGroq(messages, [], false, selectedModelName);
+          if (groqRes && groqRes.content) {
+            replyText = groqRes.content;
+          } else {
+            throw new Error('Le modèle Groq n\'a pas renvoyé de réponse');
+          }
+        } else if (provider === 'github') {
+          const githubRes = await utilsIA.queryGithub(messages, selectedModelName);
+          if (githubRes) {
+            replyText = githubRes;
+          } else {
+            throw new Error('Le modèle GitHub n\'a pas renvoyé de réponse');
+          }
+        } else if (provider === 'sambanova') {
+          const sambaRes = await utilsIA.querySambaNova(messages, selectedModelName);
+          if (sambaRes) {
+            replyText = sambaRes;
+          } else {
+            throw new Error('Le modèle SambaNova n\'a pas renvoyé de réponse');
+          }
+        } else if (provider === 'cerebras') {
+          const cerebrasRes = await utilsIA.queryCerebras(messages, selectedModelName);
+          if (cerebrasRes) {
+            replyText = cerebrasRes;
+          } else {
+            throw new Error('Le modèle Cerebras n\'a pas renvoyé de réponse');
+          }
+        } else {
+          throw new Error(`Fournisseur ${provider} non supporté`);
+        }
+      }
+
+      // Extraction de <think>...</think> si présent dans la réponse pour l'isoler
+      const thinkRegex = /<think>([\s\S]*?)<\/think>/i;
+      const thinkMatch = replyText.match(thinkRegex);
+      if (thinkMatch) {
+        thoughtsText = thinkMatch[1].trim();
+        replyText = replyText.replace(thinkRegex, '').trim();
+      }
+
+      res.json({
+        reply: replyText,
+        thoughts: thoughtsText,
+        modelUsed: selectedModelName
+      });
+    } catch (err) {
+      console.error('Erreur Mode Démo IA:', err);
+      res.status(500).json({ error: 'Erreur lors de l\'appel à l\'IA', message: err.message });
+    }
+  } else {
+    // Mode normal : Simulation d'une réponse après 800ms
+    setTimeout(() => {
+      res.json({
+        reply: "Ceci est une réponse de démonstration (placeholder). Créez un compte avec le Mode Démo activé pour parler à des modèles réels."
+      });
+    }, 800);
+  }
 });
 
 // 7. Endpoint de test classique
